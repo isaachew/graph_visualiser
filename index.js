@@ -3,6 +3,7 @@ var dpr=devicePixelRatio
 var settings={
     vertexSize:20
 }
+var labelDist=0.02
 var curGraph={
     vertices:[],
     edges:[]
@@ -28,6 +29,15 @@ function renderGraph(){
         rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
         rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
         rc.stroke()
+        rc.fillStyle="#000"
+        rc.font=15*dpr+"px sans-serif"
+        rc.textAlign="center"
+        rc.textBaseline="middle"
+        var cdx=(ev2.y-ev1.y)
+        var cdy=-(ev2.x-ev1.x)
+        var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
+        var label=curGraph.edges[i]?.label??i
+        rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*labelDist*scale,(ev1.y+ev2.y)/2+cdy/dist*labelDist*scale,dpr))
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
@@ -78,8 +88,8 @@ function updateGraph(){
             vels[i][0]-=curGraph.vertices[i].x/4
             vels[i][1]-=curGraph.vertices[i].y/4
             if(Number.isFinite(vels[i][0]**2+vels[i][1]**2)){
-                curGraph.vertices[i].x+=vels[i][0]/10
-                curGraph.vertices[i].y+=vels[i][1]/10
+                curGraph.vertices[i].x+=vels[i][0]/40
+                curGraph.vertices[i].y+=vels[i][1]/40
                 //curGraph.vertices[i].x=Math.max(Math.min(curGraph.vertices[i].x,1),-1)
                 //curGraph.vertices[i].y=Math.max(Math.min(curGraph.vertices[i].y,1),-1)
             }
@@ -111,8 +121,13 @@ document.getElementById("drawCanvas").addEventListener("mousemove",e=>{
 document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     dragging=0
 })
-for(var i=0;i<64;i++){
+for(var i=0;i<21;i++){
     curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
-    if(i)curGraph.edges.push({v1:i,v2:i*2%64})
+
+}
+for(var j=0;j<16;j++){
+    for(var k=0;k<16;k++){
+    if((j%4==(k%4+1)&&(j>>2)==(k>>2))||((j>>2)==((k>>2)+1)&&j%4==k%4))curGraph.edges.push({v1:j,v2:k,label:Math.random()*100+1|0})
+}
 }
 setInterval(updateGraph,10)
