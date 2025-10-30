@@ -1,0 +1,6 @@
+- Basic graph visualiser
+- Graph input
+
+- Algorithms on undirected graphs - Dijkstra
+- Customisable
+- Directed edges?
