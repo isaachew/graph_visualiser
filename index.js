@@ -1,9 +1,11 @@
 var width=600,height=600
 var dpr=devicePixelRatio
 var settings={
-    vertexSize:20
+    vertexSize:20,
+    vertexOutlineCol:"#000"
 }
 var labelDist=0.02
+var curTool="edge"
 var curGraph={
     vertices:[],
     edges:[]
@@ -18,7 +20,10 @@ function getDiagramCoords(x,y){
     return [(x/width-.5)*scale,(y/height-.5)*scale]
 }
 var mousePos={}
+var clickTarget=null
 var dragging=0,dragIndex=0
+
+var selectedVertex=null
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
     rc.lineWidth=2.5*dpr
@@ -41,7 +46,7 @@ function renderGraph(){
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
-        rc.strokeStyle="#000"
+        rc.strokeStyle=settings.vertexOutlineCol
         rc.lineWidth=5*dpr
         rc.fillStyle="#aaa"
         rc.beginPath()
@@ -102,13 +107,18 @@ function updateGraph(){
     renderGraph()
 }
 document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
+    clickTarget=null
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
         var cvertPos=getCanvCoords(cvert.x,cvert.y)
         if(Math.hypot(cvertPos[0]-e.offsetX,cvertPos[1]-e.offsetY)<settings.vertexSize){
-            dragIndex=i
-            dragging=1
+            clickTarget=i
         }
+    }
+
+    if(curTool=="drag"&&clickTarget!=null){
+        dragging=1
+        dragIndex=clickTarget
     }
     mousePos.x=(e.offsetX/width-0.5)*scale
     mousePos.y=(e.offsetY/height-0.5)*scale
@@ -119,15 +129,35 @@ document.getElementById("drawCanvas").addEventListener("mousemove",e=>{
     mousePos.y=(e.offsetY/height-0.5)*scale
 })
 document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
+    if(!dragging){
+        if(curTool=="vertex"){
+            curGraph.vertices.push({x:mousePos.x,y:mousePos.y})
+        }else if(curTool=="edge"){
+            if(clickTarget!=null){
+                if(selectedVertex==null){
+                    selectedVertex=clickTarget
+                }else{
+                    curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
+                    selectedVertex=null
+                }
+            }else{
+                selectedVertex=null
+            }
+        }
+        //curGraph.edges.push({v1:curGraph.vertices.length-1,v2:Math.random()*(curGraph.vertices.length-1)|0})
+    }
     dragging=0
+    clickTarget=null
 })
-for(var i=0;i<21;i++){
+for(var i=0;i<1;i++){
     curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
 
 }
+/*
 for(var j=0;j<16;j++){
     for(var k=0;k<16;k++){
     if((j%4==(k%4+1)&&(j>>2)==(k>>2))||((j>>2)==((k>>2)+1)&&j%4==k%4))curGraph.edges.push({v1:j,v2:k,label:Math.random()*100+1|0})
 }
 }
+*/
 setInterval(updateGraph,10)
