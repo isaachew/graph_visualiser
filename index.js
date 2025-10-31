@@ -20,6 +20,7 @@ function getDiagramCoords(x,y){
     return [(x/width-.5)*scale,(y/height-.5)*scale]
 }
 var mousePos={}
+var lastClickPos=null
 var clickTarget=null
 var dragging=0,dragIndex=0
 
@@ -41,13 +42,13 @@ function renderGraph(){
         var cdx=(ev2.y-ev1.y)
         var cdy=-(ev2.x-ev1.x)
         var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
-        var label=curGraph.edges[i]?.label??i
+        var label=curGraph.edges[i]?.weight??i
         rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*labelDist*scale,(ev1.y+ev2.y)/2+cdy/dist*labelDist*scale,dpr))
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
         rc.strokeStyle=settings.vertexOutlineCol
-        rc.lineWidth=5*dpr
+        rc.lineWidth=5*dpr*(1+(i==selectedVertex))
         rc.fillStyle="#aaa"
         rc.beginPath()
         rc.arc(...getCanvCoords(cvert.x,cvert.y,dpr),settings.vertexSize*dpr,0,7,0)
@@ -90,8 +91,8 @@ function updateGraph(){
         }
 
         for(var i=0;i<curGraph.vertices.length;i++){
-            vels[i][0]-=curGraph.vertices[i].x/4
-            vels[i][1]-=curGraph.vertices[i].y/4
+            vels[i][0]-=curGraph.vertices[i].x/100
+            vels[i][1]-=curGraph.vertices[i].y/100
             if(Number.isFinite(vels[i][0]**2+vels[i][1]**2)){
                 curGraph.vertices[i].x+=vels[i][0]/40
                 curGraph.vertices[i].y+=vels[i][1]/40
@@ -116,48 +117,38 @@ document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
         }
     }
 
-    if(curTool=="drag"&&clickTarget!=null){
-        dragging=1
-        dragIndex=clickTarget
-    }
     mousePos.x=(e.offsetX/width-0.5)*scale
     mousePos.y=(e.offsetY/height-0.5)*scale
+    lastClickPos=[e.offsetX,e.offsetY]
 })
 
 document.getElementById("drawCanvas").addEventListener("mousemove",e=>{
+    if(clickTarget!=null){
+        if(Math.hypot(e.offsetX-lastClickPos[0],e.offsetY-lastClickPos[1])>3){
+            dragging=1
+            dragIndex=clickTarget
+        }
+    }
     mousePos.x=(e.offsetX/width-0.5)*scale
     mousePos.y=(e.offsetY/height-0.5)*scale
 })
 document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     if(!dragging){
-        if(curTool=="vertex"){
-            curGraph.vertices.push({x:mousePos.x,y:mousePos.y})
-        }else if(curTool=="edge"){
-            if(clickTarget!=null){
-                if(selectedVertex==null){
-                    selectedVertex=clickTarget
-                }else{
-                    curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
-                    selectedVertex=null
-                }
+        if(clickTarget!=null){
+            if(selectedVertex==null){
+                selectedVertex=clickTarget
             }else{
+                if(selectedVertex!=clickTarget)curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
                 selectedVertex=null
             }
+        }else{
+            selectedVertex=null
+            curGraph.vertices.push({x:mousePos.x,y:mousePos.y})
         }
-        //curGraph.edges.push({v1:curGraph.vertices.length-1,v2:Math.random()*(curGraph.vertices.length-1)|0})
     }
     dragging=0
     clickTarget=null
 })
-for(var i=0;i<1;i++){
-    curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
+curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
 
-}
-/*
-for(var j=0;j<16;j++){
-    for(var k=0;k<16;k++){
-    if((j%4==(k%4+1)&&(j>>2)==(k>>2))||((j>>2)==((k>>2)+1)&&j%4==k%4))curGraph.edges.push({v1:j,v2:k,label:Math.random()*100+1|0})
-}
-}
-*/
 setInterval(updateGraph,10)
