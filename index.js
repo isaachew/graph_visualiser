@@ -126,7 +126,7 @@ document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
         var cvertPos=getCanvCoords(cvert.x,cvert.y)
-        var curStyle=Object.assign({},settings.vertex,cvert,graphStyles.vertices[i])
+        var curStyle=Object.assign({},settings.vertex,cvert,cvert.style)
         if(Math.hypot(cvertPos[0]-e.offsetX,cvertPos[1]-e.offsetY)<(curStyle.size)){
             clickTarget=i
         }
@@ -202,8 +202,8 @@ document.getElementById("deleteModeButton").addEventListener("click",e=>{
         e.target.textContent="delete"
     }else{
         curTool="delete"
-
         e.target.textContent="draw"
+        selectedVertex=null
     }
 })
 curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
