@@ -4,13 +4,14 @@
         <script src="index.js" defer></script>
     </head>
     <body>
-        <canvas width="1200" height="1200" style="width:600px" id="drawCanvas"></canvas>
+        <canvas width="1200" height="1200" style="width:600px" id="drawCanvas" tabindex="0"></canvas>
         <p>
             Left-click to create vertices.
             Left-click on two vertices to create or remove an edge between them.
             Vertices are draggable.
         </p>
         <button id="deleteModeButton">delete</button>
+        <button id="deleteButton">delete</button>
         <button onclick="scale/=2**.5">zoom in</button>
         <button onclick="scale*=2**.5">zoom out</button>
         <input id="weight" type="number"></input>

@@ -224,28 +224,33 @@ document.getElementById("weight").addEventListener("input",e=>{
         curGraph.edges[selectedEdge].weight=+e.target.value
     }
 })
-
+function deleteSelection(){
+    if(selectedEdge!=null){
+        curGraph.edges.splice(selectedEdge,1)
+        selectedEdge=null
+    }
+    else if(selectedVertex!=null){
+        curGraph.vertices.splice(selectedVertex,1)
+        for(var i=0;i<curGraph.edges.length;i++){
+            var curEdge=curGraph.edges[i]
+            if(curEdge.v1==selectedVertex||curEdge.v2==selectedVertex){
+                curGraph.edges.splice(i,1)
+                i--
+                continue
+            }
+            if(curEdge.v1>selectedVertex)curEdge.v1--
+            if(curEdge.v2>selectedVertex)curEdge.v2--
+        }
+        selectedVertex=null
+    }
+}
 document.getElementById("drawCanvas").addEventListener("keydown",e=>{
     if(e.key=="Backspace"){
-        if(selectedEdge!=null){
-            curGraph.edges.splice(selectedEdge,1)
-            selectedEdge=null
-        }
-        else if(selectedVertex!=null){
-            curGraph.vertices.splice(selectedVertex,1)
-            for(var i=0;i<curGraph.edges.length;i++){
-                var curEdge=curGraph.edges[i]
-                if(curEdge.v1==selectedVertex||curEdge.v2==selectedVertex){
-                    curGraph.edges.splice(i,1)
-                    i--
-                    continue
-                }
-                if(curEdge.v1>selectedVertex)curEdge.v1--
-                if(curEdge.v2>selectedVertex)curEdge.v2--
-            }
-            selectedVertex=null
-        }
+        deleteSelection()
     }
+})
+document.getElementById("deleteButton").addEventListener("click",e=>{
+    deleteSelection()
 })
 
 curGraph.vertices.push({x:0,y:0})
