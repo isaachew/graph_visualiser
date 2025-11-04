@@ -15,7 +15,7 @@ var settings={
         labelDistance:10
     }
 }
-var curTool=""
+var curTool="draw"
 var curGraph={
     vertices:[],
     edges:[]
@@ -36,11 +36,12 @@ var clickTarget=null
 var dragging=0,dragIndex=null
 
 var selectedVertex=null
+var selectedEdge=null
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
     for(var i=0;i<curGraph.edges.length;i++){
         var curStyle=Object.assign({},settings.edge,curGraph.edges[i],curGraph.edges[i].style)
-        rc.lineWidth=curStyle.width*dpr
+        rc.lineWidth=curStyle.width*dpr*(1+(i==selectedEdge))
         rc.strokeStyle=curStyle.colour
         rc.beginPath()
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
@@ -48,15 +49,17 @@ function renderGraph(){
         rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
         rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
         rc.stroke()
-        rc.fillStyle=curStyle.labelColour
-        rc.font=curStyle.labelSize*dpr+"px sans-serif"
-        rc.textAlign="center"
-        rc.textBaseline="middle"
-        var cdx=(ev2.y-ev1.y)
-        var cdy=-(ev2.x-ev1.x)
-        var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
-        var label=curGraph.edges[i]?.weight??i
-        rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
+        if(curStyle.labelSize){
+            rc.fillStyle=curStyle.labelColour
+            rc.font=curStyle.labelSize*dpr+"px sans-serif"
+            rc.textAlign="center"
+            rc.textBaseline="middle"
+            var cdx=(ev2.y-ev1.y)
+            var cdy=-(ev2.x-ev1.x)
+            var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
+            var label=curGraph.edges[i]?.weight??i
+            rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
+        }
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
@@ -64,15 +67,19 @@ function renderGraph(){
         rc.strokeStyle=curStyle.outlineCol
         rc.lineWidth=5*dpr*(1+(i==selectedVertex))
         rc.fillStyle=curStyle.colour
-        rc.beginPath()
-        rc.arc(...getCanvCoords(cvert.x,cvert.y,dpr),curStyle.size*dpr,0,7,0)
-        rc.stroke()
-        rc.fill()
-        rc.fillStyle="#000"
-        rc.font=curStyle.labelSize*dpr+"px sans-serif"
-        rc.textAlign="center"
-        rc.textBaseline="middle"
-        rc.fillText(i,...getCanvCoords(cvert.x,cvert.y,dpr))
+        if(curStyle.size){
+            rc.beginPath()
+            rc.arc(...getCanvCoords(cvert.x,cvert.y,dpr),curStyle.size*dpr,0,7,0)
+            rc.stroke()
+            rc.fill()
+        }
+        if(curStyle.labelSize){
+            rc.fillStyle="#000"
+            rc.font=curStyle.labelSize*dpr+"px sans-serif"
+            rc.textAlign="center"
+            rc.textBaseline="middle"
+            rc.fillText(i,...getCanvCoords(cvert.x,cvert.y,dpr))
+        }
     }
 }
 function updateGraph(){
@@ -156,6 +163,7 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
         if(clickTarget!=null){
             if(selectedVertex==null){
                 selectedVertex=clickTarget
+                selectedEdge=null
                 if(curTool=="delete"){
                     curGraph.vertices.splice(clickTarget,1)
                     for(var i=0;i<curGraph.edges.length;i++){
@@ -175,19 +183,23 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
                     var canAdd=true
                     for(var i=0;i<curGraph.edges.length;i++){
                         var curEdge=curGraph.edges[i]
-                        if(curEdge.v1==selectedVertex&&curEdge.v2==clickTarget){
+                        if(curEdge.v1==selectedVertex&&curEdge.v2==clickTarget||(!curEdge.directed&&curEdge.v2==selectedVertex&&curEdge.v1==clickTarget)){
                             canAdd=false
-                            curGraph.edges.splice(i,1)
+                            selectedEdge=i
                             break
                         }
                     }
-                    if(canAdd)curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
+                    if(canAdd&&curTool=="draw"){
+                        curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
+                        selectedEdge=curGraph.edges.length-1
+                    }
                 }
                 selectedVertex=null
             }
         }else{
             selectedVertex=null
-            curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
+            selectedEdge=null
+            if(curTool=="draw")curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
         }
     }
     dragging=0
@@ -198,7 +210,7 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
 
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
     if(curTool=="delete"){
-        curTool=""
+        curTool="draw"
         e.target.textContent="delete"
     }else{
         curTool="delete"
@@ -206,6 +218,36 @@ document.getElementById("deleteModeButton").addEventListener("click",e=>{
         selectedVertex=null
     }
 })
-curGraph.vertices.push({x:Math.random()-.5,y:Math.random()-.5})
+
+document.getElementById("weight").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].weight=+e.target.value
+    }
+})
+
+document.getElementById("drawCanvas").addEventListener("keydown",e=>{
+    if(e.key=="Backspace"){
+        if(selectedEdge!=null){
+            curGraph.edges.splice(selectedEdge,1)
+            selectedEdge=null
+        }
+        else if(selectedVertex!=null){
+            curGraph.vertices.splice(selectedVertex,1)
+            for(var i=0;i<curGraph.edges.length;i++){
+                var curEdge=curGraph.edges[i]
+                if(curEdge.v1==selectedVertex||curEdge.v2==selectedVertex){
+                    curGraph.edges.splice(i,1)
+                    i--
+                    continue
+                }
+                if(curEdge.v1>selectedVertex)curEdge.v1--
+                if(curEdge.v2>selectedVertex)curEdge.v2--
+            }
+            selectedVertex=null
+        }
+    }
+})
+
+curGraph.vertices.push({x:0,y:0})
 
 setInterval(updateGraph,10)
