@@ -5,9 +5,10 @@
         <script src="algorithms.js" defer></script>
         <script src="animation.js" defer></script>
         <script src="index.js" defer></script>
+        <link rel="stylesheet" href="index.css"></link>
     </head>
     <body>
-        <canvas width="1200" height="1200" style="width:600px" id="drawCanvas" tabindex="0"></canvas>
+        <canvas id="drawCanvas" tabindex="0"></canvas>
         <p>
             Left-click to create vertices.
             Left-click on two vertices to create or remove an edge between them.
@@ -17,13 +18,16 @@
         <button id="deleteButton">delete</button>
         <button onclick="scale/=2**.5">zoom in</button>
         <button onclick="scale*=2**.5">zoom out</button>
+        <div>
+            Select algorithm:
         <select id="algorithms">
             <option value="dijkstra">Dijkstra's algorithm</option>
             <option value="prim">Prim's algorithm</option>
             <option value="kruskal">Kruskal's algorithm</option>
         </select>
         <button id="runAlgorithm">Run algorithm</button>
-        <button id="clearAnim">clear animation</button>
-        <input id="weight" type="number"></input>
+        <button id="clearAnim">Clear animation</button>
+        </div>
+        Edge weight: <input id="weight" type="number"></input>
     </body>
 </html>

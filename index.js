@@ -1,5 +1,10 @@
-var width=600,height=600
+
 var dpr=devicePixelRatio
+var width=600,height=600
+var canvas=document.getElementById("drawCanvas")
+canvas.width=width*dpr
+canvas.height=height*dpr
+canvas.style.width=width
 var settings={
     vertex:{
         size:20,
@@ -23,12 +28,12 @@ var curGraph={
 var scale=2
 var camPos=[0,0]
 var velocity=0
-var rc=document.getElementById("drawCanvas").getContext("2d")
+var rc=canvas.getContext("2d")
 function getCanvCoords(x,y,sc=1){
     return [((x-camPos[0])/scale*width+width/2)*sc,((y-camPos[1])/scale*width+height/2)*sc]
 }
 function getDiagramCoords(x,y){
-    return [(x/width-.5)*scale+camPos[0],(y/width-.5)*scale+camPos[1]]
+    return [(x-width/2)/width*scale+camPos[0],(y-height/2)/width*scale+camPos[1]]
 }
 var mousePos=[0,0]
 var lastClickPos=null//used to detect dragging
@@ -262,7 +267,7 @@ document.getElementById("deleteButton").addEventListener("click",e=>{
 document.getElementById("runAlgorithm").addEventListener("click",e=>{
     if(selectedVertex!=null){
         var selectedAlgorithm=document.getElementById("algorithms").value
-        animSteps=window[selectedAlgorithm](selectedVertex)
+        animSteps=algorithms[selectedAlgorithm](selectedVertex)
         startAnim()
     }
 })
