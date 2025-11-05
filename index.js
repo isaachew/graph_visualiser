@@ -57,8 +57,8 @@ function renderGraph(){
             var cdx=(ev2.y-ev1.y)
             var cdy=-(ev2.x-ev1.x)
             var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
-            var label=curGraph.edges[i]?.weight??i
-            rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
+            var label=curGraph.edges[i]?.weight
+            if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
         }
     }
     for(var i=0;i<curGraph.vertices.length;i++){
@@ -199,13 +199,19 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
         }else{
             selectedVertex=null
             selectedEdge=null
-            if(curTool=="draw")curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
+        if(curTool=="draw")curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
         }
     }
     dragging=0
     dragIndex=null
     clickTarget=null
     lastClickPos=null
+
+    if(selectedEdge!=null){
+        document.getElementById("weight").value=curGraph.edges[selectedEdge].weight
+    }else{
+        document.getElementById("weight").value=""
+    }
 })
 
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
@@ -221,7 +227,7 @@ document.getElementById("deleteModeButton").addEventListener("click",e=>{
 
 document.getElementById("weight").addEventListener("input",e=>{
     if(selectedEdge!=null){
-        curGraph.edges[selectedEdge].weight=+e.target.value
+        curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
     }
 })
 function deleteSelection(){
