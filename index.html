@@ -1,6 +1,9 @@
 <html>
     <head>
+        <script src="heap.js" defer></script>
 
+        <script src="algorithms.js" defer></script>
+        <script src="animation.js" defer></script>
         <script src="index.js" defer></script>
     </head>
     <body>
@@ -14,6 +17,13 @@
         <button id="deleteButton">delete</button>
         <button onclick="scale/=2**.5">zoom in</button>
         <button onclick="scale*=2**.5">zoom out</button>
+        <select id="algorithms">
+            <option value="dijkstra">Dijkstra's algorithm</option>
+            <option value="prim">Prim's algorithm</option>
+            <option value="kruskal">Kruskal's algorithm</option>
+        </select>
+        <button id="runAlgorithm">Run algorithm</button>
+        <button id="clearAnim">clear animation</button>
         <input id="weight" type="number"></input>
     </body>
 </html>

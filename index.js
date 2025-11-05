@@ -259,6 +259,16 @@ document.getElementById("deleteButton").addEventListener("click",e=>{
     deleteSelection()
 })
 
+document.getElementById("runAlgorithm").addEventListener("click",e=>{
+    if(selectedVertex!=null){
+        var selectedAlgorithm=document.getElementById("algorithms").value
+        animSteps=window[selectedAlgorithm](selectedVertex)
+        startAnim()
+    }
+})
+document.getElementById("clearAnim").addEventListener("click",e=>{
+    clearAnim()
+})
 curGraph.vertices.push({x:0,y:0})
 
 setInterval(updateGraph,10)
