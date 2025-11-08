@@ -42,6 +42,7 @@ var dragging=0,dragIndex=null
 
 var selectedVertex=null
 var selectedEdge=null
+
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
     for(var i=0;i<curGraph.edges.length;i++){
@@ -85,6 +86,63 @@ function renderGraph(){
             rc.textBaseline="middle"
             rc.fillText(i,...getCanvCoords(cvert.x,cvert.y,dpr))
         }
+    }
+}
+function renderMatrix(){
+
+    var mat=document.getElementById("adjMatrix")
+    mat.textContent=""
+    var hr=document.createElement("tr")
+    mat.append(hr)
+    var bl=document.createElement("th")
+    hr.append(bl)
+    for(var i=0;i<curGraph.vertices.length;i++){
+        var vert=document.createElement("th")
+        vert.append(i)
+        hr.append(vert)
+    }
+    var curMat=[...Array(curGraph.vertices.length)].map(a=>[...Array(curGraph.vertices.length)].map(a=>null))
+
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        curMat[curEdge.v1][curEdge.v2]=curEdge.weight??1
+        if(!curEdge.directed)curMat[curEdge.v2][curEdge.v1]=curEdge.weight??1
+    }
+    for(var i=0;i<curGraph.vertices.length;i++){
+        var crow=document.createElement("tr")
+        var vert=document.createElement("th")
+        vert.append(i)
+        crow.append(vert)
+        for(var j=0;j<curGraph.vertices.length;j++){
+            var cent=document.createElement("td")
+            cent.append(curMat[j][i]??"-")
+            crow.append(cent)
+        }
+        mat.append(crow)
+    }
+}
+function renderAdjList(){
+
+    var mat=document.getElementById("adjList")
+    mat.textContent=""
+    var curList=[...Array(curGraph.vertices.length)].map(a=>[])
+
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        curList[curEdge.v1].push([curEdge.v2,curEdge.weight??1])
+        if(!curEdge.directed)curList[curEdge.v2].push([curEdge.v1,curEdge.weight??1])
+    }
+    for(var i=0;i<curGraph.vertices.length;i++){
+        var crow=document.createElement("tr")
+        var vert=document.createElement("th")
+        vert.append(i)
+        crow.append(vert)
+        for(var j=0;j<curList[i].length;j++){
+            var cent=document.createElement("td")
+            cent.append(curList[i][j]??"-")
+            crow.append(cent)
+        }
+        mat.append(crow)
     }
 }
 function updateGraph(){
@@ -132,6 +190,7 @@ function updateGraph(){
         curGraph.vertices[dragIndex].y=mousePos[1]
     }
     renderGraph()
+
 }
 document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
     clickTarget=null
@@ -211,12 +270,13 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     dragIndex=null
     clickTarget=null
     lastClickPos=null
-
     if(selectedEdge!=null){
         document.getElementById("weight").value=curGraph.edges[selectedEdge].weight
     }else{
         document.getElementById("weight").value=""
     }
+    renderMatrix()
+    renderAdjList()
 })
 
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
@@ -234,6 +294,8 @@ document.getElementById("weight").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
     }
+    renderMatrix()
+    renderAdjList()
 })
 function deleteSelection(){
     if(selectedEdge!=null){
@@ -254,6 +316,9 @@ function deleteSelection(){
         }
         selectedVertex=null
     }
+
+    renderMatrix()
+    renderAdjList()
 }
 document.getElementById("drawCanvas").addEventListener("keydown",e=>{
     if(e.key=="Backspace"){
