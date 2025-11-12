@@ -1,4 +1,3 @@
-
 var dpr=devicePixelRatio
 var width=600,height=600
 var canvas=document.getElementById("drawCanvas")
@@ -84,7 +83,7 @@ function renderGraph(){
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
             rc.textAlign="center"
             rc.textBaseline="middle"
-            rc.fillText(i,...getCanvCoords(cvert.x,cvert.y,dpr))
+            rc.fillText(cvert.label??i,...getCanvCoords(cvert.x,cvert.y,dpr))
         }
     }
 }
@@ -98,7 +97,7 @@ function renderMatrix(){
     hr.append(bl)
     for(var i=0;i<curGraph.vertices.length;i++){
         var vert=document.createElement("th")
-        vert.append(i)
+        vert.append(curGraph.vertices[i].label??i)
         hr.append(vert)
     }
     var curMat=[...Array(curGraph.vertices.length)].map(a=>[...Array(curGraph.vertices.length)].map(a=>null))
@@ -111,7 +110,7 @@ function renderMatrix(){
     for(var i=0;i<curGraph.vertices.length;i++){
         var crow=document.createElement("tr")
         var vert=document.createElement("th")
-        vert.append(i)
+        vert.append(curGraph.vertices[i].label??i)
         crow.append(vert)
         for(var j=0;j<curGraph.vertices.length;j++){
             var cent=document.createElement("td")
@@ -129,17 +128,19 @@ function renderAdjList(){
 
     for(var i=0;i<curGraph.edges.length;i++){
         var curEdge=curGraph.edges[i]
-        curList[curEdge.v1].push([curEdge.v2,curEdge.weight??1])
-        if(!curEdge.directed)curList[curEdge.v2].push([curEdge.v1,curEdge.weight??1])
+        curList[curEdge.v1].push([curEdge.v2,curEdge.weight])
+        if(!curEdge.directed)curList[curEdge.v2].push([curEdge.v1,curEdge.weight])
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var crow=document.createElement("tr")
         var vert=document.createElement("th")
-        vert.append(i)
+        vert.append(curGraph.vertices[i].label??i)
         crow.append(vert)
         for(var j=0;j<curList[i].length;j++){
             var cent=document.createElement("td")
-            cent.append(curList[i][j]??"-")
+            var vlabel=curGraph.vertices[curList[i][j][0]].label??curList[i][j][0]
+            var strep=vlabel+(curList[i][j][1]==null?"":","+curList[i][j][1])
+            cent.append(strep??"-")
             crow.append(cent)
         }
         mat.append(crow)

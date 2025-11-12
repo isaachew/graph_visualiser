@@ -113,7 +113,7 @@ var algorithms={
         }
         var steps=[]
         var eorder=curGraph.edges.map((a,b)=>b)
-        eorder.sort((a,b)=>curGraph.edges[a].weight-curGraph.edges[b].weight)
+        eorder.sort((a,b)=>(curGraph.edges[a].weight??1)-(curGraph.edges[b].weight??1))
         for(var i=0;i<curGraph.edges.length;i++){
             var eind=eorder[i]
             var curEdge=curGraph.edges[eind]
