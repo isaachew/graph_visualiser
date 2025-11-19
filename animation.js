@@ -10,6 +10,10 @@ setInterval(()=>{
                 curGraph.vertices[j.index].style=j.style
             }else if(j.type=="edge"){
                 curGraph.edges[j.index].style=j.style
+            }else if(j.type=="output"){
+                var dvEl=document.createElement("div")
+                dvEl.append(j.text)
+                document.getElementById("algOutput").append(dvEl)
             }
         }
     }
@@ -20,6 +24,8 @@ setInterval(()=>{
 },10)
 function clearAnim(){
     curGraph.edges.map(a=>{delete a.style});curGraph.vertices.map(a=>{delete a.style})
+    lastTime=null
+    document.getElementById("algOutput").textContent=""
 }
 function startAnim(){
     clearAnim()

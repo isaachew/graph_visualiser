@@ -15,6 +15,9 @@ var styles={
         used:{colour:"green",width:3}
     }
 }
+function getVertexLabel(vert){
+    return (curGraph.vertices[vert].label??vert)
+}
 var algorithms={
     dijkstra(vert,dest){
         var pq=new Heap((a,b)=>a[1]<b[1])
@@ -27,12 +30,12 @@ var algorithms={
             if(!curGraph.edges[i].directed)adj[curGraph.edges[i].v2].push(i)
         }
         pq.push([vert,0,-1])
-        var clast=0
         while(pq.length){
             var cur=pq.pop()
             if(dists[cur[0]]!=-1)continue
-            if(cur[2]!=-1)steps.push([{type:"edge",index:cur[2],style:styles.dijkstra.tree}])//shortest path tree
-            clast=cur[0]
+            var curStep=[]
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur[0])+" (weight "+cur[1]+"):"}])
+            if(cur[2]!=-1)steps[steps.length-1].push({type:"edge",index:cur[2],style:styles.dijkstra.tree})//shortest path tree
             last[cur[0]]=cur[2]
             dists[cur[0]]=cur[1]
             steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
@@ -40,21 +43,26 @@ var algorithms={
                 var eind=adj[cur[0]][i]
                 var cedge=curGraph.edges[eind]
                 if(cedge.v1==cur[0]&&dists[cedge.v2]==-1){
-                    steps.push([{type:"edge",index:eind,style:styles.dijkstra.considered}])
+                    steps.push([{type:"output",text:"Vertex "+getVertexLabel(cedge.v2)+" reached with weight "+(cur[1]+(cedge.weight??1))},{type:"edge",index:eind,style:styles.dijkstra.considered}])
                     pq.push([cedge.v2,cur[1]+(cedge.weight??1),eind])
                     //await new Promise(a=>setTimeout(a,400))
                 }else if(!cedge.directed&&cedge.v2==cur[0]&&dists[cedge.v1]==-1){
-                    steps.push([{type:"edge",index:eind,style:styles.dijkstra.considered}])
+                    steps.push([{type:"output",text:"Vertex "+getVertexLabel(cedge.v1)+" reached with weight "+(cur[1]+(cedge.weight??1))},{type:"edge",index:eind,style:styles.dijkstra.considered}])
                     pq.push([cedge.v1,cur[1]+(cedge.weight??1),eind])
                     //await new Promise(a=>setTimeout(a,400))
                 }
             }
         }
-        if(dest!=null)clast=dest
-        if(dists[clast]==-1)return steps
-        while(clast!=vert){
-            steps.push([{type:"edge",index:last[clast],style:styles.dijkstra.path}])
-            clast=clast^curGraph.edges[last[clast]].v1^curGraph.edges[last[clast]].v2
+        if(dest==null)return steps
+        if(dists[dest]==-1){
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(dest)+" unreachable"}])
+            return steps
+        }
+        steps.push([{type:"output",text:"Vertex "+getVertexLabel(dest)+" shortest path length "+dists[dest]}])
+
+        while(dest!=vert){
+            steps.push([{type:"edge",index:last[dest],style:styles.dijkstra.path}])
+            dest=dest^curGraph.edges[last[dest]].v1^curGraph.edges[last[dest]].v2
             //await new Promise(a=>setTimeout(a,400))
         }
         console.log(dists)
@@ -79,7 +87,10 @@ var algorithms={
                 continue
             }
             visited[cur[0]]=true
-            if(cur[2]!=-1)steps.push([{type:"edge",index:cur[2],style:styles.prim.used}])
+            if(cur[2]!=-1){
+                var prevVertex=cur[0]^curGraph.edges[cur[2]].v1^curGraph.edges[cur[2]].v2
+                steps.push([{type:"output",text:"Adding vertex "+getVertexLabel(cur[0])+" (weight "+cur[1]+"from vertex "+getVertexLabel(prevVertex)+")"},{type:"edge",index:cur[2],style:styles.prim.used}])
+            }
             clast=cur[0]
             steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
             for(var i=0;i<adj[cur[0]].length;i++){
