@@ -41,6 +41,7 @@ var dragging=0,dragIndex=null
 
 var selectedVertex=null
 var selectedEdge=null
+var adjListEnabled=0,adjMatrixEnabled=0
 
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
@@ -62,7 +63,7 @@ function renderGraph(){
             var cdx=(ev2.y-ev1.y)
             var cdy=-(ev2.x-ev1.x)
             var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
-            var label=curGraph.edges[i]?.weight
+            var label=curGraph.edges[i].label??curGraph.edges[i].weight
             if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
         }
     }
@@ -272,12 +273,21 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     clickTarget=null
     lastClickPos=null
     if(selectedEdge!=null){
-        document.getElementById("weight").value=curGraph.edges[selectedEdge].weight
+        document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
+        document.getElementById("edgeColour").value=curGraph.edges[selectedEdge].colour??""
+        document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
+        document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
     }else{
-        document.getElementById("weight").value=""
+        //document.getElementById("edgeWeight").value=""
     }
-    renderMatrix()
-    renderAdjList()
+    if(selectedVertex!=null){
+        document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].weight??""
+        document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??""
+        //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
+    }else{
+    }
+    if(adjMatrixEnabled)renderMatrix()
+    if(adjListEnabled)renderAdjList()
 })
 
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
@@ -291,13 +301,6 @@ document.getElementById("deleteModeButton").addEventListener("click",e=>{
     }
 })
 
-document.getElementById("weight").addEventListener("input",e=>{
-    if(selectedEdge!=null){
-        curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
-    }
-    renderMatrix()
-    renderAdjList()
-})
 function deleteSelection(){
     if(selectedEdge!=null){
         curGraph.edges.splice(selectedEdge,1)
@@ -339,6 +342,45 @@ document.getElementById("runAlgorithm").addEventListener("click",e=>{
 })
 document.getElementById("clearAnim").addEventListener("click",e=>{
     clearAnim()
+})
+
+document.getElementById("edgeWeight").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
+    }
+    renderMatrix()
+    renderAdjList()
+})
+document.getElementById("vertexColour").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        curGraph.vertices[selectedVertex].colour=e.target.value||null
+        if(curGraph.vertices[selectedVertex].colour==null)delete curGraph.vertices[selectedVertex].colour
+    }
+})
+
+document.getElementById("vertexLabel").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        curGraph.vertices[selectedVertex].label=e.target.value||null
+        if(curGraph.vertices[selectedVertex].label==null)delete curGraph.vertices[selectedVertex].label
+    }
+})
+document.getElementById("edgeColour").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].colour=e.target.value||null
+        if(curGraph.edges[selectedEdge].colour==null)delete curGraph.edges[selectedEdge].colour
+    }
+})
+document.getElementById("edgeWidth").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].width=e.target.value||null
+        if(curGraph.edges[selectedEdge].width==null)delete curGraph.edges[selectedEdge].width
+    }
+})
+document.getElementById("edgeLabel").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].label=e.target.value||null
+        if(curGraph.edges[selectedEdge].label==null)delete curGraph.edges[selectedEdge].label
+    }
 })
 curGraph.vertices.push({x:0,y:0})
 
