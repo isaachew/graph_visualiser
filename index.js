@@ -8,13 +8,13 @@ var settings={
     vertex:{
         size:20,
         labelSize:15,
-        outlineCol:"#000",
-        colour:"#aaa"
+        outlineCol:"#000000",
+        colour:"#aaaaaa"
     },
     edge:{
         labelSize:15,
-        labelColour:"#000",
-        colour:"#000",
+        labelColour:"#000000",
+        colour:"#000000",
         width:1,
         labelDistance:10
     }
@@ -274,7 +274,8 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     lastClickPos=null
     if(selectedEdge!=null){
         document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
-        document.getElementById("edgeColour").value=curGraph.edges[selectedEdge].colour??""
+        document.getElementById("edgeColour").value=curGraph.edges[selectedEdge].colour??settings.edge.colour
+        document.getElementById("edgeColDefault").checked=curGraph.edges[selectedEdge].colour==null
         document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
         document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
     }else{
@@ -282,7 +283,8 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     }
     if(selectedVertex!=null){
         document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
-        document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??""
+        document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
+        document.getElementById("vertexColDefault").checked=curGraph.vertices[selectedVertex].colour==null
         //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
     }else{
     }
@@ -353,8 +355,20 @@ document.getElementById("edgeWeight").addEventListener("input",e=>{
 })
 document.getElementById("vertexColour").addEventListener("input",e=>{
     if(selectedVertex!=null){
-        curGraph.vertices[selectedVertex].colour=e.target.value||null
-        if(curGraph.vertices[selectedVertex].colour==null)delete curGraph.vertices[selectedVertex].colour
+        curGraph.vertices[selectedVertex].colour=e.target.value
+        document.getElementById("vertexColDefault").checked=false
+    }
+})
+
+document.getElementById("vertexColDefault").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        if(e.value==false){
+            curGraph.vertices[selectedVertex].colour=settings.vertex.colour
+            document.getElementById("vertexColour").value=settings.vertex.colour
+        }else{
+            delete curGraph.vertices[selectedVertex].colour
+            document.getElementById("vertexColour").value=settings.vertex.colour
+        }
     }
 })
 
@@ -366,8 +380,19 @@ document.getElementById("vertexLabel").addEventListener("input",e=>{
 })
 document.getElementById("edgeColour").addEventListener("input",e=>{
     if(selectedEdge!=null){
-        curGraph.edges[selectedEdge].colour=e.target.value||null
-        if(curGraph.edges[selectedEdge].colour==null)delete curGraph.edges[selectedEdge].colour
+        curGraph.edges[selectedEdge].colour=e.target.value
+        document.getElementById("edgeColDefault").value=false
+    }
+})
+document.getElementById("edgeColDefault").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        if(e.value==false){
+            curGraph.edges[selectedEdge].colour=settings.edge.colour
+            document.getElementById("edgeColour").value=settings.edge.colour
+        }else{
+            delete curGraph.edges[selectedEdge].colour
+            document.getElementById("edgeColour").value=settings.edge.colour
+        }
     }
 })
 document.getElementById("edgeWidth").addEventListener("input",e=>{
