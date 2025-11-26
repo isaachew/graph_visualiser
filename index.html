@@ -24,6 +24,7 @@
             <option value="dijkstra">Dijkstra's algorithm</option>
             <option value="prim">Prim's algorithm</option>
             <option value="kruskal">Kruskal's algorithm</option>
+            <option value="nn">Nearest neighbour algorithm (TSP)</option>
         </select>
         <button id="runAlgorithm">Run algorithm</button>
         <button id="clearAnim">Clear animation</button>
@@ -37,6 +38,13 @@
             <div>Vertex label: <input id="vertexLabel" type="text"></input></div>
             <div>&nbsp;</div>
             <div>Edge weight: <input id="edgeWeight" type="number"></input></div>
+        </div>
+        <div>
+            Default settings:
+            <div>Edge colour: <input id="defaultEdgeColour" type="color"></input></div>
+            <div>Edge width: <input id="defaultEdgeWidth" type="number"></input></div>
+            <div>&nbsp;</div>
+            <div>Vertex colour: <input id="defaultVertexColour" type="color"></input></div>
         </div>
         <div id="algOutput"></div>
         <table id="adjMatrix"></table>

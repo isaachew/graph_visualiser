@@ -281,7 +281,7 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
         //document.getElementById("edgeWeight").value=""
     }
     if(selectedVertex!=null){
-        document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].weight??""
+        document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
         document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??""
         //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
     }else{
@@ -321,8 +321,8 @@ function deleteSelection(){
         selectedVertex=null
     }
 
-    renderMatrix()
-    renderAdjList()
+    if(adjMatrixEnabled)renderMatrix()
+    if(adjListEnabled)renderAdjList()
 }
 document.getElementById("drawCanvas").addEventListener("keydown",e=>{
     if(e.key=="Backspace"){
@@ -381,6 +381,15 @@ document.getElementById("edgeLabel").addEventListener("input",e=>{
         curGraph.edges[selectedEdge].label=e.target.value||null
         if(curGraph.edges[selectedEdge].label==null)delete curGraph.edges[selectedEdge].label
     }
+})
+document.getElementById("defaultEdgeColour").addEventListener("input",e=>{
+    settings.edge.colour=e.target.value
+})
+document.getElementById("defaultEdgeWidth").addEventListener("input",e=>{
+    settings.edge.width=e.target.value
+})
+document.getElementById("defaultVertexColour").addEventListener("input",e=>{
+    settings.vertex.colour=e.target.value
 })
 curGraph.vertices.push({x:0,y:0})
 

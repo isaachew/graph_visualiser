@@ -13,6 +13,9 @@ var styles={
         considered:{colour:"red"},
         unused:{colour:"#aaa",width:1},
         used:{colour:"green",width:3}
+    },
+    nn:{
+        path:{colour:"blue",width:3}
     }
 }
 function getVertexLabel(vert){
@@ -135,6 +138,78 @@ var algorithms={
                 steps.push([{type:"edge",index:eind,style:styles.kruskal.unused}])
             }
         }
+        return steps
+    },
+    nn(vert){//Nearest neighbour algorithm
+        var distmat=[]
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            if(!curGraph.edges[i].directed)adj[curGraph.edges[i].v2].push(i)
+        }
+        for(var vi=0;vi<curGraph.vertices.length;vi++){
+            var dists=curGraph.vertices.map(a=>[-1,-1])
+            var pq=new Heap((a,b)=>a[1]<b[1])
+            pq.push([vi,0])
+            while(pq.length){
+                var cur=pq.pop()
+                if(dists[cur[0]][0]!=-1)continue
+                dists[cur[0]]=[cur[1],cur[2]]
+                for(var i=0;i<adj[cur[0]].length;i++){
+                    var eind=adj[cur[0]][i]
+                    var cedge=curGraph.edges[eind]
+                    if(cedge.v1==cur[0]&&dists[cedge.v2][0]==-1){
+                        pq.push([cedge.v2,cur[1]+(cedge.weight??1),eind])
+                        //await new Promise(a=>setTimeout(a,400))
+                    }else if(!cedge.directed&&cedge.v2==cur[0]&&dists[cedge.v1][0]==-1){
+                        pq.push([cedge.v1,cur[1]+(cedge.weight??1),eind])
+                        //await new Promise(a=>setTimeout(a,400))
+                    }
+                }
+            }
+            distmat.push(dists)
+        }
+        var visited=curGraph.vertices.map(a=>0)
+        var cvert=vert
+        var wei=0
+        var cpath=[[vert,-1]]
+        for(var a=0;a<1e3;a++){
+            var best=-1,bv=-1//best vertex
+            visited[cvert]=1
+            for(var i=0;i<curGraph.vertices.length;i++){
+                if(visited[i])continue
+                if(bv==-1||distmat[cvert][i][0]<best){
+                    best=distmat[cvert][i][0]
+                    bv=i
+                }
+            }
+            if(bv!=-1)steps.push([{type:"output",text:"Nearest unvisited neighbour of "+getVertexLabel(cvert)+" is "+getVertexLabel(bv)+" (distance "+best+")"}])
+            else steps.push([{type:"output",text:"Return to starting point"}])
+            console.log(cvert)
+            if(bv==-1)bv=vert
+            var cps=[]
+            var cpv=bv
+            while(cpv!=cvert){
+                var curEdgeInd=distmat[cvert][cpv][1]
+                console.log(curEdgeInd)
+                cps.push([cpv,curEdgeInd])
+                var nv=cpv^curGraph.edges[curEdgeInd].v1^curGraph.edges[curEdgeInd].v2
+                cpv=nv
+            }
+            cps.reverse()
+            for(var j=0;j<cps.length;j++){
+                steps.push([{type:"edge",index:cps[j][1],style:styles.nn.path}])
+            }
+            cpath.push(...cps)
+            cvert=bv
+            wei+=best
+            if(bv==vert)break
+        }
+        wei+=distmat[vert][cvert][0]
+        console.log(wei,cpath)
+        steps.push([{type:"output",text:"Full path: "+cpath.map(a=>getVertexLabel(a[0])).join(", ")+" (total weight "+wei+")"}])
+
         return steps
     }
 }
