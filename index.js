@@ -273,20 +273,24 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     clickTarget=null
     lastClickPos=null
     if(selectedEdge!=null){
+        document.getElementById("edgeSettings").style.display="block"
         document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
         document.getElementById("edgeColour").value=curGraph.edges[selectedEdge].colour??settings.edge.colour
         document.getElementById("edgeColDefault").checked=curGraph.edges[selectedEdge].colour==null
         document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
         document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
     }else{
+        document.getElementById("edgeSettings").style.display="none"
         //document.getElementById("edgeWeight").value=""
     }
     if(selectedVertex!=null){
+        document.getElementById("vertexSettings").style.display="block"
         document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
         document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
         document.getElementById("vertexColDefault").checked=curGraph.vertices[selectedVertex].colour==null
         //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
     }else{
+        document.getElementById("vertexSettings").style.display="none"
     }
     if(adjMatrixEnabled)renderMatrix()
     if(adjListEnabled)renderAdjList()
@@ -350,8 +354,8 @@ document.getElementById("edgeWeight").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
     }
-    renderMatrix()
-    renderAdjList()
+    if(adjMatrixEnabled)renderMatrix()
+    if(adjListEnabled)renderAdjList()
 })
 document.getElementById("vertexColour").addEventListener("input",e=>{
     if(selectedVertex!=null){

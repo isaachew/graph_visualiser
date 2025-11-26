@@ -179,20 +179,19 @@ var algorithms={
             visited[cvert]=1
             for(var i=0;i<curGraph.vertices.length;i++){
                 if(visited[i])continue
-                if(bv==-1||distmat[cvert][i][0]<best){
+                if((bv==-1||distmat[cvert][i][0]<best)&&distmat[cvert][i][0]!=-1){
                     best=distmat[cvert][i][0]
                     bv=i
                 }
             }
             if(bv!=-1)steps.push([{type:"output",text:"Nearest unvisited neighbour of "+getVertexLabel(cvert)+" is "+getVertexLabel(bv)+" (distance "+best+")"}])
-            else steps.push([{type:"output",text:"Return to starting point"}])
-            console.log(cvert)
+            else steps.push([{type:"output",text:"Return to starting point (weight "+distmat[cvert][vert][0]+")"}])
             if(bv==-1)bv=vert
             var cps=[]
             var cpv=bv
+            wei+=distmat[cvert][bv][0]
             while(cpv!=cvert){
                 var curEdgeInd=distmat[cvert][cpv][1]
-                console.log(curEdgeInd)
                 cps.push([cpv,curEdgeInd])
                 var nv=cpv^curGraph.edges[curEdgeInd].v1^curGraph.edges[curEdgeInd].v2
                 cpv=nv
@@ -203,10 +202,8 @@ var algorithms={
             }
             cpath.push(...cps)
             cvert=bv
-            wei+=best
             if(bv==vert)break
         }
-        wei+=distmat[vert][cvert][0]
         console.log(wei,cpath)
         steps.push([{type:"output",text:"Full path: "+cpath.map(a=>getVertexLabel(a[0])).join(", ")+" (total weight "+wei+")"}])
 
