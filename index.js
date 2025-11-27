@@ -55,6 +55,18 @@ function renderGraph(){
         rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
         rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
         rc.stroke()
+        if(curGraph.edges[i].directed){
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            var ev1ev2rat=0.5
+            var arrSizeX=0.03
+            var arrSizeY=0.01
+            rc.beginPath()
+            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*arrSizeY)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*arrSizeY)/ev1ev2d,dpr))
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*-arrSizeY)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*-arrSizeY)/ev1ev2d,dpr))//back and down
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*arrSizeX-(ev2.y-ev1.y)*0)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*arrSizeX+(ev2.x-ev1.x)*0)/ev1ev2d,dpr))//back and down
+            rc.closePath()
+            rc.fill()
+        }
         if(curStyle.labelSize){
             rc.fillStyle=curStyle.labelColour
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
@@ -385,7 +397,7 @@ document.getElementById("vertexLabel").addEventListener("input",e=>{
 document.getElementById("edgeColour").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].colour=e.target.value
-        document.getElementById("edgeColDefault").value=false
+        document.getElementById("edgeColDefault").checked=false
     }
 })
 document.getElementById("edgeColDefault").addEventListener("input",e=>{
