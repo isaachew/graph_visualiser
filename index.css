@@ -1,3 +1,14 @@
 #drawCanvas{
     border:1px solid black
 }
+.settings div{
+    padding:2px
+}
+#mainContainer{
+    display:flex;
+    flex-direction:row;
+    width:100%
+}
+#settingsContainer{
+    flex-grow:1
+}

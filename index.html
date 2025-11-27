@@ -7,8 +7,24 @@
         <script src="index.js" defer></script>
         <link rel="stylesheet" href="index.css"></link>
     </head>
-    <body>
+    <body style="font-family:sans-serif">
+        <div id="mainContainer">
         <canvas id="drawCanvas" tabindex="0"></canvas>
+        <div id="settingsContainer">
+            <div id="edgeSettings" class="settings">
+            <div style="padding:2px">Edge colour: <input id="edgeColour" type="color"></input><input type="checkbox" id="edgeColDefault"> Default</div>
+            <div>Edge width: <input id="edgeWidth" type="number"></input></div>
+            <div>Edge label: <input id="edgeLabel" type="text"></input></div>
+            <div>Edge weight: <input id="edgeWeight" type="number"></input></div>
+            <div>&nbsp;</div>
+            </div>
+            <div id="vertexSettings" class="settings">
+            <div>Vertex colour: <input id="vertexColour" type="color"></input><input type="checkbox" id="vertexColDefault"> Default</div>
+            <div>Vertex label: <input id="vertexLabel" type="text"></input></div>
+            <div>&nbsp;</div>
+            </div>
+        </div>
+        </div>
         <p>
             Left-click to create vertices.
             Left-click on two vertices to create or remove an edge between them.
@@ -27,22 +43,13 @@
             <option value="nn">Nearest neighbour algorithm (TSP)</option>
         </select>
         <button id="runAlgorithm">Run algorithm</button>
-        <button id="clearAnim">Clear animation</button>
+        <button id="clearAnim">Reset</button>
+        <button id="playButton">Pause</button>
+        <button id="stepButton">Step</button>
+        <input id="speedInput" type="range" min="0" max="15" step="any">
+        <input type="checkbox" id="outputEnabled">
         </div>
-        <div>
-            <div id="edgeSettings">
-            <div>Edge colour: <input id="edgeColour" type="color"></input><input type="checkbox" id="edgeColDefault"></div>
-            <div>Edge width: <input id="edgeWidth" type="number"></input></div>
-            <div>Edge label: <input id="edgeLabel" type="text"></input></div>
-            <div>Edge weight: <input id="edgeWeight" type="number"></input></div>
-            <div>&nbsp;</div>
-            </div>
-            <div id="vertexSettings">
-            <div>Vertex colour: <input id="vertexColour" type="color"></input><input type="checkbox" id="vertexColDefault"></div>
-            <div>Vertex label: <input id="vertexLabel" type="text"></input></div>
-            <div>&nbsp;</div>
-            </div>
-        </div>
+
         <div>
             Default settings:
             <div>Edge colour: <input id="defaultEdgeColour" type="color"></input></div>

@@ -92,7 +92,7 @@ var algorithms={
             visited[cur[0]]=true
             if(cur[2]!=-1){
                 var prevVertex=cur[0]^curGraph.edges[cur[2]].v1^curGraph.edges[cur[2]].v2
-                steps.push([{type:"output",text:"Adding vertex "+getVertexLabel(cur[0])+" (weight "+cur[1]+"from vertex "+getVertexLabel(prevVertex)+")"},{type:"edge",index:cur[2],style:styles.prim.used}])
+                steps.push([{type:"output",text:"Adding vertex "+getVertexLabel(cur[0])+" (weight "+cur[1]+" from vertex "+getVertexLabel(prevVertex)+")"},{type:"edge",index:cur[2],style:styles.prim.used}])
             }
             clast=cur[0]
             steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
@@ -185,8 +185,16 @@ var algorithms={
                 }
             }
             if(bv!=-1)steps.push([{type:"output",text:"Nearest unvisited neighbour of "+getVertexLabel(cvert)+" is "+getVertexLabel(bv)+" (distance "+best+")"}])
-            else steps.push([{type:"output",text:"Return to starting point (weight "+distmat[cvert][vert][0]+")"}])
-            if(bv==-1)bv=vert
+            else{
+                bv=vert
+                if(distmat[cvert][vert][1]==-1){
+                    steps.push([{type:"output",text:"Cannot return to starting point"}])
+                    return steps
+                }else{
+                    steps.push([{type:"output",text:"Return to starting point (weight "+distmat[cvert][vert][0]+")"}])
+                }
+            }
+
             var cps=[]
             var cpv=bv
             wei+=distmat[cvert][bv][0]
