@@ -291,6 +291,7 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
         document.getElementById("edgeColDefault").checked=curGraph.edges[selectedEdge].colour==null
         document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
         document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
+        document.getElementById("edgeDirected").checked=curGraph.edges[selectedEdge].directed
     }else{
         document.getElementById("edgeSettings").style.display="none"
         //document.getElementById("edgeWeight").value=""
@@ -421,6 +422,12 @@ document.getElementById("edgeLabel").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].label=e.target.value||null
         if(curGraph.edges[selectedEdge].label==null)delete curGraph.edges[selectedEdge].label
+    }
+})
+document.getElementById("edgeDirected").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        curGraph.edges[selectedEdge].directed=e.target.checked
+        if(curGraph.edges[selectedEdge].directed==false)delete curGraph.edges[selectedEdge].directed
     }
 })
 document.getElementById("defaultEdgeColour").addEventListener("input",e=>{

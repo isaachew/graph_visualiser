@@ -26,7 +26,6 @@ setInterval(()=>{
 },10)
 function clearAnim(){
     curGraph.edges.map(a=>{delete a.style});curGraph.vertices.map(a=>{delete a.style})
-    lastTime=null
     targ=0
     progress=0
     document.getElementById("algOutput").textContent=""
@@ -38,8 +37,13 @@ function startAnim(){
     targ=0
 }
 document.getElementById("playButton").addEventListener("click",e=>{
-    if(lastTime==null)lastTime=+new Date
-    else lastTime=null
+    if(lastTime==null){
+        lastTime=+new Date
+        e.target.textContent="Pause"
+    }else{
+        lastTime=null
+        e.target.textContent="Play"
+    }
 })
 document.getElementById("stepButton").addEventListener("click",e=>{
     targ++
