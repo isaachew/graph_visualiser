@@ -212,8 +212,78 @@ var algorithms={
             cvert=bv
             if(bv==vert)break
         }
-        console.log(wei,cpath)
         steps.push([{type:"output",text:"Full path: "+cpath.map(a=>getVertexLabel(a[0])).join(", ")+" (total weight "+wei+")"}])
+
+        return steps
+    },
+    cpa(){//assumes all edges are directed
+        var adj=curGraph.vertices.map(a=>[])
+        var radj=curGraph.vertices.map(a=>[])
+        var indegs=curGraph.vertices.map(a=>0)
+        var outdegs=curGraph.vertices.map(a=>0)
+        var ets=curGraph.vertices.map(a=>-Infinity)
+        var lts=curGraph.vertices.map(a=>Infinity)
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push([curGraph.edges[i].v2,i])
+            radj[curGraph.edges[i].v2].push([curGraph.edges[i].v1,i])
+            indegs[curGraph.edges[i].v2]++
+            outdegs[curGraph.edges[i].v1]++
+        }
+        var steps=[]
+        var dfs_st=[]
+        for(var i=0;i<curGraph.vertices.length;i++){
+            if(indegs[i]==0){
+                dfs_st.push(i)
+                ets[i]=0
+            }
+        }
+        steps.push([{type:"output",text:"Forward pass"}])
+        while(dfs_st.length){
+            var cur=dfs_st.pop()
+            for(var i=0;i<radj[cur].length;i++){
+                steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight}`},{type:"edge",index:radj[cur][i][1],style:{colour:"#0a0"}}])
+            }
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{colour:"red"}}])
+
+            for(var i=0;i<adj[cur].length;i++){
+                var nxt=adj[cur][i]
+                indegs[nxt[0]]--
+                ets[nxt[0]]=Math.max(ets[nxt[0]],ets[cur]+(curGraph.edges[nxt[1]].weight??0))
+                if(indegs[nxt[0]]==0){
+                    dfs_st.push(nxt[0])
+                }
+            }
+        }
+        steps.push([{type:"output",text:"Backward pass"}])
+        for(var i=0;i<curGraph.vertices.length;i++){
+            if(outdegs[i]==0){
+                dfs_st.push(i)
+                lts[i]=ets[i]
+            }
+        }
+        while(dfs_st.length){
+            var cur=dfs_st.pop()
+            for(var i=0;i<adj[cur].length;i++){
+                steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight}`},{type:"edge",index:adj[cur][i][1],style:{colour:"#00a"}}])
+            }
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{colour:"#ff0"}}])
+            for(var i=0;i<radj[cur].length;i++){
+                var nxt=radj[cur][i]
+                outdegs[nxt[0]]--
+                lts[nxt[0]]=Math.min(lts[nxt[0]],lts[cur]-(curGraph.edges[nxt[1]].weight??0))
+                if(outdegs[nxt[0]]==0){
+                    dfs_st.push(nxt[0])
+                }
+            }
+        }
+        for(var i=0;i<curGraph.edges.length;i++){
+            if(curGraph.edges[i].weight){
+                var lt=lts[curGraph.edges[i].v2]
+                var et=ets[curGraph.edges[i].v1]
+                var wei=curGraph.edges[i].weight
+                steps.push([{type:"output",text:"Edge "+curGraph.edges[i].label+` float ${lt}-${et}-${wei}=`+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
+            }
+        }
 
         return steps
     }

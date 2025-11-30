@@ -28,11 +28,14 @@ function clearAnim(){
     curGraph.edges.map(a=>{delete a.style});curGraph.vertices.map(a=>{delete a.style})
     targ=0
     progress=0
+    lastTime=null
+    document.getElementById("playButton").textContent="Play"
     document.getElementById("algOutput").textContent=""
 }
 function startAnim(){
     clearAnim()
     lastTime=+new Date
+    document.getElementById("playButton").textContent="Pause"
     progress=0
     targ=0
 }
