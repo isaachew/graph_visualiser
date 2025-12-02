@@ -1,8 +1,8 @@
 - Basic graph visualiser
 - Graph input
 - Algorithms on undirected graphs - Dijkstra
+- Customisable (vertex/edge styles)
 
 - Export as PNG/SVG
 - User interface
-- Customisable (vertex/edge styles)
-- Directed edges?
+- Directed edges (render arrows)

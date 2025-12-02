@@ -42,11 +42,19 @@ var dragging=0,dragIndex=null
 var selectedVertex=null
 var selectedEdge=null
 var adjListEnabled=0,adjMatrixEnabled=0
-
+function getStyle(...args){
+    var ob={}
+    for(var i of args){
+        for(var j in i){
+            ob[j]=i[j]??ob[j]
+        }
+    }
+    return ob
+}
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
     for(var i=0;i<curGraph.edges.length;i++){
-        var curStyle=Object.assign({},settings.edge,curGraph.edges[i],curGraph.edges[i].style)
+        var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
         rc.lineWidth=curStyle.width*dpr*(1+(i==selectedEdge))
         rc.strokeStyle=curStyle.colour
         rc.beginPath()
@@ -75,13 +83,13 @@ function renderGraph(){
             var cdx=(ev2.y-ev1.y)
             var cdy=-(ev2.x-ev1.x)
             var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
-            var label=curGraph.edges[i].label??curGraph.edges[i].weight
+            var label=curStyle.label??curGraph.edges[i].weight
             if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
         }
     }
     for(var i=0;i<curGraph.vertices.length;i++){
         var cvert=curGraph.vertices[i]
-        var curStyle=Object.assign({},settings.vertex,cvert,cvert.style)
+        var curStyle=getStyle(settings.vertex,cvert,cvert.style)
         rc.strokeStyle=curStyle.outlineCol
         rc.lineWidth=5*dpr*(1+(i==selectedVertex))
         rc.fillStyle=curStyle.colour
@@ -96,7 +104,7 @@ function renderGraph(){
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
             rc.textAlign="center"
             rc.textBaseline="middle"
-            rc.fillText(cvert.label??i,...getCanvCoords(cvert.x,cvert.y,dpr))
+            rc.fillText(curStyle.label??i,...getCanvCoords(cvert.x,cvert.y,dpr))
         }
     }
 }

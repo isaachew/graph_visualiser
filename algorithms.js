@@ -68,7 +68,6 @@ var algorithms={
             dest=dest^curGraph.edges[last[dest]].v1^curGraph.edges[last[dest]].v2
             //await new Promise(a=>setTimeout(a,400))
         }
-        console.log(dists)
         return steps
     },
     prim(vert){
@@ -286,5 +285,132 @@ var algorithms={
         }
 
         return steps
+    },
+    rip(vert){
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        var swei=0
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            adj[curGraph.edges[i].v2].push(i)
+            swei+=curGraph.edges[i].weight
+        }
+
+        function gperms(arr){
+            if(arr.length<=1)return [[]]
+            var res=[]
+            for(var i=1;i<arr.length;i++){
+                var a=arr.slice(1)
+                var b=a.splice(i-1,1)
+                res.push(...gperms(a).map(c=>[[arr[0],b[0]],...c]))
+            }
+            return res
+        }
+        var odeg=[]
+        for(var i=0;i<curGraph.vertices.length;i++){
+            if(adj[i].length%2)odeg.push(i)
+        }
+        var vcount=curGraph.edges.map(a=>1)
+        var distmat=[]
+        for(var vi=0;vi<curGraph.vertices.length;vi++){
+            var dists=curGraph.vertices.map(a=>[-1,-1])
+            var pq=new Heap((a,b)=>a[1]<b[1])
+            pq.push([vi,0,-1])
+            while(pq.length){
+                var cur=pq.pop()
+                if(dists[cur[0]][0]!=-1)continue
+                dists[cur[0]]=[cur[1],cur[2]]
+                for(var i=0;i<adj[cur[0]].length;i++){
+                    var eind=adj[cur[0]][i]
+                    var cedge=curGraph.edges[eind]
+                    if(cedge.v1==cur[0]&&dists[cedge.v2][0]==-1){
+                        pq.push([cedge.v2,cur[1]+(cedge.weight??1),eind])
+                        //await new Promise(a=>setTimeout(a,400))
+                    }else if(cedge.v2==cur[0]&&dists[cedge.v1][0]==-1){
+                        pq.push([cedge.v1,cur[1]+(cedge.weight??1),eind])
+                        //await new Promise(a=>setTimeout(a,400))
+                    }
+                }
+            }
+            distmat.push(dists)
+            if(vi!=0&&dists[0][1]==-1)return [[{type:"output",text:"Graph is not connected"}]]
+        }
+
+        if(odeg.length){
+            steps.push([{type:"output",text:"Odd degree vertices are "+odeg.map(a=>getVertexLabel(a)).join(", ")}])
+
+            var configs=gperms(odeg)
+            var mcs=[null,Infinity]
+            var lpaths=[]
+            for(var i=0;i<configs.length;i++){
+                var cconf=configs[i]
+                var cstep=[{type:"output",text:"Pairing "+cconf.map(a=>getVertexLabel(a[0])+" - "+getVertexLabel(a[1])).join(", ")},...odeg.map(a=>({type:"vertex",index:a,style:{}}))]
+                steps.push(cstep)
+                var ccs=0
+                for(var j=0;j<cconf.length;j++){
+                    var cpair=cconf[j]
+                    steps.push([{type:"output",text:getVertexLabel(cpair[0])+" - "+getVertexLabel(cpair[1])+" has distance "+distmat[cpair[0]][cpair[1]][0]},
+                            {type:"vertex",index:cpair[0],style:{colour:"red"}},
+                            {type:"vertex",index:cpair[1],style:{colour:"red"}}
+                        ])
+                    ccs+=distmat[cpair[0]][cpair[1]][0]
+                }
+                if(ccs<mcs[1])mcs=[cconf,ccs]
+            }
+            steps.push([{type:"output",text:"Best pairing: "+mcs[0].map(a=>getVertexLabel(a[0])+" - "+getVertexLabel(a[1])).join(", ")+" (weight "+mcs[1]+")"},...odeg.map(a=>({type:"vertex",index:a,style:{}}))])
+            for(var j=0;j<mcs[0].length;j++){
+                var src=mcs[0][j][0]
+                var dest=mcs[0][j][1]
+                while(dest!=src){
+                    var ceind=distmat[dest][src][1]
+                    var cedge=curGraph.edges[ceind]
+
+                    vcount[ceind]++
+                    src^=cedge.v1^cedge.v2
+                }
+            }
+            steps.push([{type:"output",text:"Total weight: "+(mcs[1]+swei)}])
+
+        }else{
+            steps.push([{type:"output",text:"No odd degree vertices"}])
+        }
+        function gtour(vert){
+            var vlist=[]
+            var elist=[]
+            var cvert=vert
+            while(1){
+                var ceind=-1
+                for(var i=0;i<adj[cvert].length;i++){
+                    if(vcount[adj[cvert][i]]>0){
+                        ceind=adj[cvert][i]
+                        var cedge=curGraph.edges[ceind]
+                        cvert^=cedge.v1^cedge.v2
+                        vcount[ceind]--
+                        break
+                    }
+                }
+                if(ceind==-1)break
+                elist.push(ceind)
+                vlist.push(cvert)
+            }
+            var nvlist=[]
+            var nelist=[]
+            for(var i=0;i<vlist.length;i++){
+                nvlist.push(vlist[i])
+                nelist.push(elist[i])
+                var res=gtour(vlist[i])
+                nvlist.push(...res[0])
+                nelist.push(...res[1])
+            }
+            return [nvlist,nelist]
+        }
+        var ctour=gtour(vert)
+        steps.push([{type:"output",text:"Example path: "+[vert,...ctour[0]].map(a=>getVertexLabel(a)).join(", ")}])
+        for(var i=0;i<ctour[1].length;i++){
+            steps.push([{type:"edge",index:ctour[1][i],style:{colour:vcount[ctour[1][i]]>=2?"#0000ff":vcount[ctour[1][i]]?"#00cc00":"#ff0000",width:2}}])
+            vcount[ctour[1][i]]++
+        }
+        return steps
     }
+
 }
