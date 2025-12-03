@@ -3,7 +3,7 @@ var width=600,height=600
 var canvas=document.getElementById("drawCanvas")
 canvas.width=width*dpr
 canvas.height=height*dpr
-canvas.style.width=width
+canvas.style.width=width+"px"
 var settings={
     vertex:{
         size:20,
@@ -35,7 +35,7 @@ function getDiagramCoords(x,y){
     return [(x-width/2)/width*scale+camPos[0],(y-height/2)/width*scale+camPos[1]]
 }
 var mousePos=[0,0]
-var lastClickPos=null//used to detect dragging
+var lastMousePos=null//last position of mouse in page coords
 var clickTarget=null
 var dragging=0,dragIndex=null
 
@@ -226,11 +226,11 @@ document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
     }
 
     mousePos=getDiagramCoords(e.offsetX,e.offsetY)
-    lastClickPos=[e.offsetX,e.offsetY]
+    lastMousePos=[e.offsetX,e.offsetY]
 })
 
-document.getElementById("drawCanvas").addEventListener("mousemove",e=>{
-    if(lastClickPos&&Math.hypot(e.offsetX-lastClickPos[0],e.offsetY-lastClickPos[1])>3){
+document.addEventListener("mousemove",e=>{
+    if(lastMousePos&&Math.hypot(e.offsetX-lastMousePos[0],e.offsetY-lastMousePos[1])>3){
         dragging=1
         if(clickTarget!=null){
             dragIndex=clickTarget
@@ -238,14 +238,20 @@ document.getElementById("drawCanvas").addEventListener("mousemove",e=>{
 
         }
     }
-    mousePos=getDiagramCoords(e.offsetX,e.offsetY)
+    if(dragging){
+        var canvRect=canvas.getBoundingClientRect()
+        var mousePagePos=[e.clientX-canvRect.left,e.clientY-canvRect.top]
+        mousePos=getDiagramCoords(mousePagePos[0],mousePagePos[1])
+        var posDiff=[mousePagePos[0]-lastMousePos[0],mousePagePos[1]-lastMousePos[1]]
+        lastMousePos=mousePagePos
+    }
     if(dragging&&clickTarget==null){
-        camPos[0]-=e.movementX/width*scale
-        camPos[1]-=e.movementY/width*scale
+        camPos[0]-=posDiff[0]/width*scale
+        camPos[1]-=posDiff[1]/width*scale
     }
 })
-document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
-    if(!dragging){
+document.addEventListener("mouseup",e=>{
+    if(!dragging&&lastMousePos!=null){
         if(clickTarget!=null){
             if(selectedVertex==null){
                 selectedVertex=clickTarget
@@ -291,7 +297,7 @@ document.getElementById("drawCanvas").addEventListener("mouseup",e=>{
     dragging=0
     dragIndex=null
     clickTarget=null
-    lastClickPos=null
+    lastMousePos=null
     if(selectedEdge!=null){
         document.getElementById("edgeSettings").style.display="block"
         document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
@@ -446,6 +452,19 @@ document.getElementById("defaultEdgeWidth").addEventListener("input",e=>{
 })
 document.getElementById("defaultVertexColour").addEventListener("input",e=>{
     settings.vertex.colour=e.target.value
+})
+
+
+document.getElementById("exportPNG").addEventListener("click",e=>{
+    canvas.toBlob(a=>{
+        if(a==null)return
+        var ourl=URL.createObjectURL(a)
+        var lnk=document.createElement("a")
+        lnk.download="graph"
+        lnk.href=ourl
+        lnk.click()
+        URL.revokeObjectURL(ourl)
+    })
 })
 curGraph.vertices.push({x:0,y:0})
 

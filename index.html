@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <script src="heap.js" defer></script>
@@ -33,6 +34,7 @@
         <button id="deleteButton">delete</button>
         <button onclick="scale/=2**.5">zoom in</button>
         <button onclick="scale*=2**.5">zoom out</button>
+        <button id="exportPNG">Export PNG</button>
         <div>
             Select algorithm:
         <select id="algorithms">
@@ -55,7 +57,6 @@
             Default settings:
             <div>Edge colour: <input id="defaultEdgeColour" type="color"></input></div>
             <div>Edge width: <input id="defaultEdgeWidth" type="number"></input></div>
-            <div>&nbsp;</div>
             <div>Vertex colour: <input id="defaultVertexColour" type="color"></input></div>
         </div>
         <div id="algOutput"></div>
