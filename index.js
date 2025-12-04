@@ -17,7 +17,9 @@ var settings={
         colour:"#000000",
         width:1,
         labelDistance:10
-    }
+    },
+    curvedEdges:true,
+    directedEdgeDist:0.02
 }
 var curTool="draw"
 var curGraph={
@@ -65,13 +67,19 @@ function renderGraph(){
         rc.beginPath()
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
         var ev2=curGraph.vertices[curGraph.edges[i].v2]
-        rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
         //rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
-        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?0.05:0
+        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?settings.directedEdgeDist:0
         if(curGraph.edges[i].directed&&directedDist){
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
-            rc.quadraticCurveTo(...getCanvCoords((ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2,dpr),...getCanvCoords(ev2.x,ev2.y,dpr))
+            if(settings.curvedEdges){
+                rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
+                rc.quadraticCurveTo(...getCanvCoords((ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2,dpr),...getCanvCoords(ev2.x,ev2.y,dpr))
+            }else{
+                rc.moveTo(...getCanvCoords(ev1.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev1.y-(ev2.x-ev1.x)/ev1ev2d*directedDist,dpr))
+                rc.lineTo(...getCanvCoords(ev2.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev2.y-(ev2.x-ev1.x)/ev1ev2d*directedDist,dpr))
+            }
         }else{
+            rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
             rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
         }
         rc.stroke()
@@ -224,7 +232,7 @@ function updateGraph(){
         curGraph.vertices[dragIndex].y=mousePos[1]
     }
     renderGraph()
-
+    requestAnimationFrame(updateGraph)
 }
 document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
     clickTarget=null
@@ -491,5 +499,5 @@ document.getElementById("exportPNG").addEventListener("click",e=>{
     })
 })
 curGraph.vertices.push({x:0,y:0})
-
-setInterval(updateGraph,10)
+updateGraph()
+//setInterval(updateGraph,16)
