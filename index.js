@@ -34,8 +34,8 @@ function getCanvCoords(x,y,sc=1){
 function getDiagramCoords(x,y){
     return [(x-width/2)/width*scale+camPos[0],(y-height/2)/width*scale+camPos[1]]
 }
-var mousePos=[0,0]
-var lastMousePos=null//last position of mouse in page coords
+var mousePos=[0,0]//mouse position in canvas coords
+var lastMousePos=null//last position of mouse in page coords, to detect dragging
 var clickTarget=null
 var dragging=0,dragIndex=null
 
@@ -53,6 +53,11 @@ function getStyle(...args){
 }
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
+    var adjList={}
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        adjList[curEdge.v1+" "+curEdge.v2]=1
+    }
     for(var i=0;i<curGraph.edges.length;i++){
         var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
         rc.lineWidth=curStyle.width*dpr*(1+(i==selectedEdge))
@@ -61,17 +66,24 @@ function renderGraph(){
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
         var ev2=curGraph.vertices[curGraph.edges[i].v2]
         rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
-        rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+        //rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?0.05:0
+        if(curGraph.edges[i].directed&&directedDist){
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            rc.quadraticCurveTo(...getCanvCoords((ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2,dpr),...getCanvCoords(ev2.x,ev2.y,dpr))
+        }else{
+            rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+        }
         rc.stroke()
-        if(curGraph.edges[i].directed){
+        if(curGraph.edges[i].directed){//draw arrow
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
             var ev1ev2rat=0.5
             var arrSizeX=0.03
             var arrSizeY=0.01
             rc.beginPath()
-            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*arrSizeY)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*arrSizeY)/ev1ev2d,dpr))
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*-arrSizeY)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*-arrSizeY)/ev1ev2d,dpr))//back and down
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*arrSizeX-(ev2.y-ev1.y)*0)/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*arrSizeX+(ev2.x-ev1.x)*0)/ev1ev2d,dpr))//back and down
+            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d,dpr))
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d,dpr))//back and down
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*arrSizeX-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*arrSizeX+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d,dpr))//back and down
             rc.closePath()
             rc.fill()
         }
@@ -84,7 +96,7 @@ function renderGraph(){
             var cdy=-(ev2.x-ev1.x)
             var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
             var label=curStyle.label??curGraph.edges[i].weight
-            if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*curStyle.labelDistance/width*scale,(ev1.y+ev2.y)/2+cdy/dist*curStyle.labelDistance/width*scale,dpr))
+            if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*(curStyle.labelDistance/width*scale+directedDist),(ev1.y+ev2.y)/2+cdy/dist*(curStyle.labelDistance/width*scale+directedDist),dpr))
         }
     }
     for(var i=0;i<curGraph.vertices.length;i++){
@@ -273,6 +285,7 @@ document.addEventListener("mouseup",e=>{
             }else{
                 if(selectedVertex!=clickTarget){
                     var canAdd=true
+                    var revEdge=false//directed edge in opposite direction
                     for(var i=0;i<curGraph.edges.length;i++){
                         var curEdge=curGraph.edges[i]
                         if(curEdge.v1==selectedVertex&&curEdge.v2==clickTarget||(!curEdge.directed&&curEdge.v2==selectedVertex&&curEdge.v1==clickTarget)){
@@ -280,9 +293,12 @@ document.addEventListener("mouseup",e=>{
                             selectedEdge=i
                             break
                         }
+                        if(curEdge.directed&&curEdge.v2==selectedVertex&&curEdge.v1==clickTarget){
+                            revEdge=true
+                        }
                     }
                     if(canAdd&&curTool=="draw"){
-                        curGraph.edges.push({v1:selectedVertex,v2:clickTarget})
+                        curGraph.edges.push({v1:selectedVertex,v2:clickTarget,directed:revEdge})
                         selectedEdge=curGraph.edges.length-1
                     }
                 }
@@ -440,6 +456,14 @@ document.getElementById("edgeLabel").addEventListener("input",e=>{
 })
 document.getElementById("edgeDirected").addEventListener("input",e=>{
     if(selectedEdge!=null){
+        var editedEdge=curGraph.edges[selectedEdge]
+        for(var i=0;i<curGraph.edges.length;i++){//do not allow if there is a reverse edge
+            var curEdge=curGraph.edges[i]
+            if(curEdge.v2==editedEdge.v1&&curEdge.v1==editedEdge.v2){
+                e.target.checked=true
+                return
+            }
+        }
         curGraph.edges[selectedEdge].directed=e.target.checked
         if(curGraph.edges[selectedEdge].directed==false)delete curGraph.edges[selectedEdge].directed
     }
