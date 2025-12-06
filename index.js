@@ -89,9 +89,9 @@ function renderGraph(){
             var arrSizeX=0.03
             var arrSizeY=0.01
             rc.beginPath()
-            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d,dpr))
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*0-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*0+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d,dpr))//back and down
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*arrSizeX-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*arrSizeX+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d,dpr))//back and down
+            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d,dpr))
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d,dpr))//back and down
+            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(arrSizeX/2)-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(arrSizeX/2)+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d,dpr))//back and down
             rc.closePath()
             rc.fill()
         }
@@ -186,6 +186,119 @@ function renderAdjList(){
         }
         mat.append(crow)
     }
+}
+
+function renderGraphSVG(){
+    var svel=document.createElementNS("http://www.w3.org/2000/svg","svg")
+    svel.setAttribute("xmlns","http://www.w3.org/2000/svg")
+    svel.setAttribute("viewBox",`${camPos[0]-scale/2} ${camPos[1]-scale/2} ${scale} ${scale}`)
+    svel.setAttribute("width","600")
+    svel.style.fontSize=settings.edge.labelSize/width*scale
+    var stel=document.createElementNS("http://www.w3.org/2000/svg","style")
+    stel.append("text{dominant-baseline:middle;text-anchor:middle;font-family:Arial}")
+    svel.appendChild(stel)
+    var adjList={}
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        adjList[curEdge.v1+" "+curEdge.v2]=1
+    }
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
+        var pel=document.createElementNS("http://www.w3.org/2000/svg","path")
+        pel.style.strokeWidth=curStyle.width/width*scale
+        pel.style.stroke=curStyle.colour
+
+        var peld=""
+        var ev1=curGraph.vertices[curGraph.edges[i].v1]
+        var ev2=curGraph.vertices[curGraph.edges[i].v2]
+        //rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?settings.directedEdgeDist:0
+        if(curGraph.edges[i].directed&&directedDist){
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            if(settings.curvedEdges){
+                peld+="M"+[ev1.x,ev1.y]
+                peld+="Q"+[(ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2]+","+[ev2.x,ev2.y]
+            }else{
+                peld+="M"+[ev1.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev1.y-(ev2.x-ev1.x)/ev1ev2d*directedDist]
+                peld+="L"+[ev2.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev2.y-(ev2.x-ev1.x)/ev1ev2d*directedDist]
+            }
+        }else{
+            peld+="M"+[ev1.x,ev1.y]
+            peld+="L"+[ev2.x,ev2.y]
+        }
+        pel.setAttribute("d",peld)
+        pel.setAttribute("fill","none")
+        svel.append(pel)
+        if(curGraph.edges[i].directed){//draw arrow
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            var ev1ev2rat=0.5
+            var arrSizeX=0.03
+            var arrSizeY=0.01
+            var pel=document.createElementNS("http://www.w3.org/2000/svg","path")
+            var peld=""
+            peld+="M"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d]
+            peld+="L"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d]//back and down
+            peld+="L"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(arrSizeX)/2-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(arrSizeX/2)+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d]//back and down
+            peld+="Z"
+            pel.setAttribute("d",peld)
+            svel.append(pel)
+        }
+        if(curStyle.labelSize){
+            rc.fillStyle=curStyle.labelColour
+            var cdx=(ev2.y-ev1.y)
+            var cdy=-(ev2.x-ev1.x)
+            var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
+            var label=curStyle.label??curGraph.edges[i].weight
+
+            if(label!=null){
+                var pel=document.createElementNS("http://www.w3.org/2000/svg","text")
+                pel.setAttribute("x",(ev1.x+ev2.x)/2+cdx/dist*(curStyle.labelDistance/width*scale+directedDist))
+                pel.setAttribute("y",(ev1.y+ev2.y)/2+cdy/dist*(curStyle.labelDistance/width*scale+directedDist))
+                pel.setAttribute("font-size",curStyle.labelSize/width*scale)
+                pel.setAttribute("fill",curStyle.labelColour)
+
+                pel.append(label)
+                svel.append(pel)
+            }
+        }
+    }
+    for(var i=0;i<curGraph.vertices.length;i++){
+        var cvert=curGraph.vertices[i]
+        var curStyle=getStyle(settings.vertex,cvert,cvert.style)
+        rc.strokeStyle=curStyle.outlineCol
+        rc.lineWidth=5*dpr*(1+(i==selectedVertex))
+        rc.fillStyle=curStyle.colour
+        if(curStyle.size){
+            var pel=document.createElementNS("http://www.w3.org/2000/svg","circle")
+            pel.setAttribute("cx",cvert.x)
+            pel.setAttribute("cy",cvert.y)
+            pel.setAttribute("r",curStyle.size/width*scale)
+            pel.setAttribute("fill",curStyle.colour)
+            pel.setAttribute("stroke",curStyle.outlineCol)
+            pel.setAttribute("stroke-width",5/width*scale/2)
+            svel.appendChild(pel)
+        }
+        if(curStyle.labelSize){
+            var pel=document.createElementNS("http://www.w3.org/2000/svg","text")
+            pel.textContent=curStyle.label??i
+            pel.setAttribute("x",cvert.x)
+            pel.setAttribute("y",cvert.y)
+            pel.setAttribute("font-size",curStyle.labelSize/width*scale)
+            svel.appendChild(pel)
+            /*rc.fillStyle="#000"
+            rc.font=curStyle.labelSize*dpr+"px sans-serif"
+            rc.textAlign="center"
+            rc.textBaseline="middle"
+            */
+        }
+    }
+    var obj=new Blob([svel.outerHTML],{type:"image/svg+xml"})
+    var ourl=URL.createObjectURL(obj)
+    var lnk=document.createElement("a")
+    lnk.download="graph.svg"
+    lnk.href=ourl
+    lnk.click()
+    URL.revokeObjectURL(ourl)
 }
 function updateGraph(){
     if(velocity){
@@ -486,7 +599,6 @@ document.getElementById("defaultVertexColour").addEventListener("input",e=>{
     settings.vertex.colour=e.target.value
 })
 
-
 document.getElementById("exportPNG").addEventListener("click",e=>{
     canvas.toBlob(a=>{
         if(a==null)return
@@ -498,6 +610,8 @@ document.getElementById("exportPNG").addEventListener("click",e=>{
         URL.revokeObjectURL(ourl)
     })
 })
+document.getElementById("exportSVG").addEventListener("click",e=>{
+    renderGraphSVG()
+})
 curGraph.vertices.push({x:0,y:0})
 updateGraph()
-//setInterval(updateGraph,16)

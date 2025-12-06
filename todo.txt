@@ -2,7 +2,9 @@
 - Graph input
 - Algorithms on undirected graphs - Dijkstra
 - Customisable (vertex/edge styles)
-
 - Export as PNG/SVG
+
 - User interface
 - Directed edges (render arrows)
+- Graph generation
+-
