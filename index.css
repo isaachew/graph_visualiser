@@ -1,7 +1,11 @@
 #drawCanvas{
-    border:1px solid black
+    border:1px solid black;
+    outline:none
 }
-.settings div{
+.settings{
+    padding:5px
+}
+.settings>div{
     padding:2px
 }
 #mainContainer{
@@ -9,6 +13,24 @@
     flex-direction:row;
     width:100%
 }
-#settingsContainer{
-    flex-grow:1
+#tabs{
+    flex:1;
+}
+#algOutput{
+    padding:5px;
+    border:1px solid #aaa;
+    overflow:auto;
+    height:300px;
+}
+
+#tabs{
+    flex:1;display:flex;flex-direction:column
+}
+#tabMenu{
+    flex:0;display:flex;flex-direction:row;
+}
+#tabMenu>div{
+    flex:1;
+    border-right:1px solid #aaa;
+    text-align:center
 }

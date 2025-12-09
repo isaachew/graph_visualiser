@@ -530,7 +530,7 @@ document.getElementById("vertexColour").addEventListener("input",e=>{
 
 document.getElementById("vertexColDefault").addEventListener("input",e=>{
     if(selectedVertex!=null){
-        if(e.value==false){
+        if(e.target.checked==false){
             curGraph.vertices[selectedVertex].colour=settings.vertex.colour
             document.getElementById("vertexColour").value=settings.vertex.colour
         }else{
@@ -554,7 +554,7 @@ document.getElementById("edgeColour").addEventListener("input",e=>{
 })
 document.getElementById("edgeColDefault").addEventListener("input",e=>{
     if(selectedEdge!=null){
-        if(e.value==false){
+        if(e.target.checked==false){
             curGraph.edges[selectedEdge].colour=settings.edge.colour
             document.getElementById("edgeColour").value=settings.edge.colour
         }else{
@@ -612,6 +612,17 @@ document.getElementById("exportPNG").addEventListener("click",e=>{
 })
 document.getElementById("exportSVG").addEventListener("click",e=>{
     renderGraphSVG()
+})
+function getCode(){
+    console.log(JSON.stringify({settings:settings,graph:curGraph}))
+}
+[...document.getElementById("tabMenu").children].map((a,b)=>{
+    a.onclick=a=>{
+        [...document.getElementById("tabs").children].slice(1).forEach(b=>{
+            b.style.display="none"
+        });
+        [...document.getElementById("tabs").children][b+1].style.display="block"
+    }
 })
 curGraph.vertices.push({x:0,y:0})
 updateGraph()
