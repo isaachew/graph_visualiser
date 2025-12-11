@@ -9,13 +9,14 @@ var settings={
         size:20,
         labelSize:15,
         outlineCol:"#000000",
+        outlineWidth:2,
         colour:"#aaaaaa"
     },
     edge:{
         labelSize:15,
         labelColour:"#000000",
         colour:"#000000",
-        width:1,
+        width:2,
         labelDistance:10
     },
     curvedEdges:true,
@@ -64,6 +65,7 @@ function renderGraph(){
         var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
         rc.lineWidth=curStyle.width*dpr*(1+(i==selectedEdge))
         rc.strokeStyle=curStyle.colour
+        if(curStyle.dash)rc.setLineDash(curStyle.dash.map(a=>a*curStyle.width*dpr*(1+(i==selectedEdge))))
         rc.beginPath()
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
         var ev2=curGraph.vertices[curGraph.edges[i].v2]
@@ -83,6 +85,8 @@ function renderGraph(){
             rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
         }
         rc.stroke()
+
+        rc.setLineDash([])
         if(curGraph.edges[i].directed){//draw arrow
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
             var ev1ev2rat=0.5
@@ -111,13 +115,13 @@ function renderGraph(){
         var cvert=curGraph.vertices[i]
         var curStyle=getStyle(settings.vertex,cvert,cvert.style)
         rc.strokeStyle=curStyle.outlineCol
-        rc.lineWidth=5*dpr*(1+(i==selectedVertex))
+        rc.lineWidth=curStyle.outlineWidth*dpr*(1+(i==selectedVertex))
         rc.fillStyle=curStyle.colour
         if(curStyle.size){
             rc.beginPath()
             rc.arc(...getCanvCoords(cvert.x,cvert.y,dpr),curStyle.size*dpr,0,7,0)
-            rc.stroke()
             rc.fill()
+            rc.stroke()
         }
         if(curStyle.labelSize){
             rc.fillStyle="#000"
@@ -162,7 +166,7 @@ function renderMatrix(){
     }
 }
 function renderAdjList(){
-
+    if(!adjListEnabled)return
     var mat=document.getElementById("adjList")
     mat.textContent=""
     var curList=[...Array(curGraph.vertices.length)].map(a=>[])
@@ -266,7 +270,7 @@ function renderGraphSVG(){
         var cvert=curGraph.vertices[i]
         var curStyle=getStyle(settings.vertex,cvert,cvert.style)
         rc.strokeStyle=curStyle.outlineCol
-        rc.lineWidth=5*dpr*(1+(i==selectedVertex))
+        rc.lineWidth=curStyle.outlineWidth*dpr*(1+(i==selectedVertex))
         rc.fillStyle=curStyle.colour
         if(curStyle.size){
             var pel=document.createElementNS("http://www.w3.org/2000/svg","circle")
@@ -275,7 +279,7 @@ function renderGraphSVG(){
             pel.setAttribute("r",curStyle.size/width*scale)
             pel.setAttribute("fill",curStyle.colour)
             pel.setAttribute("stroke",curStyle.outlineCol)
-            pel.setAttribute("stroke-width",5/width*scale/2)
+            pel.setAttribute("stroke-width",curStyle.outlineWidth/width*scale)
             svel.appendChild(pel)
         }
         if(curStyle.labelSize){
@@ -442,6 +446,7 @@ document.addEventListener("mouseup",e=>{
         document.getElementById("edgeColDefault").checked=curGraph.edges[selectedEdge].colour==null
         document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
         document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
+        document.getElementById("edgeDash").value=(curGraph.edges[selectedEdge].dash?.join(",")??"default")||"0"
         document.getElementById("edgeDirected").checked=curGraph.edges[selectedEdge].directed
     }else{
         document.getElementById("edgeSettings").style.display="none"
@@ -452,6 +457,8 @@ document.addEventListener("mouseup",e=>{
         document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
         document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
         document.getElementById("vertexColDefault").checked=curGraph.vertices[selectedVertex].colour==null
+        document.getElementById("vertexOutlineCol").checked=curGraph.vertices[selectedVertex].outlineCol??settings.edge.outlineCol
+        document.getElementById("vertexOutlineColDefault").checked=curGraph.vertices[selectedVertex].outlineCol==null
         //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
     }else{
         document.getElementById("vertexSettings").style.display="none"
@@ -546,6 +553,29 @@ document.getElementById("vertexLabel").addEventListener("input",e=>{
         if(curGraph.vertices[selectedVertex].label==null)delete curGraph.vertices[selectedVertex].label
     }
 })
+document.getElementById("vertexOutlineWidth").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        curGraph.vertices[selectedVertex].outlineWidth=e.target.value||null
+        if(curGraph.vertices[selectedVertex].outlineWidth==null)delete curGraph.vertices[selectedVertex].outlineWidth
+    }
+})
+document.getElementById("vertexOutlineCol").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        curGraph.vertices[selectedVertex].outlineCol=e.target.value||null
+        if(curGraph.vertices[selectedVertex].outlineCol==null)delete curGraph.vertices[selectedVertex].outlineCol
+    }
+})
+document.getElementById("vertexOutlineColDefault").addEventListener("input",e=>{
+    if(selectedVertex!=null){
+        if(e.target.checked==false){
+            curGraph.vertices[selectedVertex].outlineCol=settings.vertex.outlineCol
+            document.getElementById("vertexOutlineCol").value=settings.vertex.outlineCol
+        }else{
+            delete curGraph.vertices[selectedVertex].outlineCol
+            document.getElementById("vertexOutlineCol").value=settings.vertex.outlineCol
+        }
+    }
+})
 document.getElementById("edgeColour").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].colour=e.target.value
@@ -561,6 +591,12 @@ document.getElementById("edgeColDefault").addEventListener("input",e=>{
             delete curGraph.edges[selectedEdge].colour
             document.getElementById("edgeColour").value=settings.edge.colour
         }
+    }
+})
+document.getElementById("edgeDash").addEventListener("input",e=>{
+    if(selectedEdge!=null){
+        if(e.target.value!="default")curGraph.edges[selectedEdge].dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
+        else delete curGraph.edges[selectedEdge].dash
     }
 })
 document.getElementById("edgeWidth").addEventListener("input",e=>{
@@ -595,10 +631,15 @@ document.getElementById("defaultEdgeColour").addEventListener("input",e=>{
 document.getElementById("defaultEdgeWidth").addEventListener("input",e=>{
     settings.edge.width=e.target.value
 })
+document.getElementById("defaultEdgeDash").addEventListener("input",e=>{
+    settings.edge.dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
+})
 document.getElementById("defaultVertexColour").addEventListener("input",e=>{
     settings.vertex.colour=e.target.value
 })
-
+document.getElementById("defaultVertexOutlineCol").addEventListener("input",e=>{
+    settings.vertex.outlineCol=e.target.value
+})
 document.getElementById("exportPNG").addEventListener("click",e=>{
     canvas.toBlob(a=>{
         if(a==null)return
@@ -612,6 +653,29 @@ document.getElementById("exportPNG").addEventListener("click",e=>{
 })
 document.getElementById("exportSVG").addEventListener("click",e=>{
     renderGraphSVG()
+})
+document.getElementById("adjMatrixExpander").firstChild.addEventListener("click",e=>{
+    console.log("hi")
+    if(!adjMatrixEnabled){
+        adjMatrixEnabled=1
+        document.getElementById("adjMatrixExpander").classList.add("expanded")
+        renderMatrix()
+    }else{
+        adjMatrixEnabled=0
+        document.getElementById("adjMatrixExpander").classList.remove("expanded")
+        document.getElementById("adjMatrix").textContent=""
+    }
+})
+document.getElementById("adjListExpander").firstChild.addEventListener("click",e=>{
+    if(!adjListEnabled){
+        adjListEnabled=1
+        document.getElementById("adjListExpander").classList.add("expanded")
+        renderAdjList()
+    }else{
+        adjListEnabled=0
+        document.getElementById("adjListExpander").classList.remove("expanded")
+        document.getElementById("adjList").textContent=""
+    }
 })
 function getCode(){
     console.log(JSON.stringify({settings:settings,graph:curGraph}))
