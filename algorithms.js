@@ -130,11 +130,11 @@ var algorithms={
         for(var i=0;i<curGraph.edges.length;i++){
             var eind=eorder[i]
             var curEdge=curGraph.edges[eind]
-            steps.push([{type:"edge",index:eind,style:styles.kruskal.considered}])
+            steps.push([{type:"edge",index:eind,style:styles.kruskal.considered},{type:"output",text:"Considering edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)+" (weight "+(curEdge.weight??1)+")"}])
             if(merge(curEdge.v1,curEdge.v2)){
-                steps.push([{type:"edge",index:eind,style:styles.kruskal.used}])
+                steps.push([{type:"edge",index:eind,style:styles.kruskal.used},{type:"output",text:"Added edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)}])
             }else{
-                steps.push([{type:"edge",index:eind,style:styles.kruskal.unused}])
+                steps.push([{type:"edge",index:eind,style:styles.kruskal.unused},{type:"output",text:"Unable to add edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)}])
             }
         }
         return steps

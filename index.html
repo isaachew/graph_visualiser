@@ -11,42 +11,42 @@
     <body style="font-family:sans-serif">
         <div id="mainContainer">
         <canvas id="drawCanvas" tabindex="0"></canvas>
-        <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div></div>
-        <div id="settingsMenu">
-            <div id="edgeSettings" class="settings" style="display:none">
-            <div>Edge colour: <input id="edgeColour" type="color"></input><input type="checkbox" id="edgeColDefault"> Default</div>
-            <div>Edge width: <input id="edgeWidth" type="number"></input></div>
-            <div>Edge dash: <select id="edgeDash">
+        <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div><div>Graph</div></div>
+        <div id="settingsMenu" style="display:block">
+            <div id="edgeSettings" class="settings">
+            <div><span>Edge colour: </span><input id="edgeColour" type="color"></input><input type="checkbox" id="edgeColDefault"><span>Default</span></div>
+            <div><span>Edge width: </span><input id="edgeWidth" type="number"></input></div>
+            <div><span>Edge dash: </span><select id="edgeDash">
                 <option value="default">Default</option>
                 <option value="0">Solid</option>
                 <option value="5,2">Dashed</option>
                 <option value="1,2">Dotted</option>
             </select></div>
-            <div>Edge label: <input id="edgeLabel" type="text"></input></div>
-            <div>Edge weight: <input id="edgeWeight" type="number"></input></div>
-            <div>Directed <input id="edgeDirected" type="checkbox"></input></div>
+            <div><span>Edge label: </span><input id="edgeLabel" type="text"></input></div>
+            <div><span>Edge weight: </span><input id="edgeWeight" type="number"></input></div>
+            <div><span>Directed </span><input id="edgeDirected" type="checkbox"></input></div>
             </div>
-            <div id="vertexSettings" class="settings" style="display:none">
-            <div>Vertex colour: <input id="vertexColour" type="color"></input><input type="checkbox" id="vertexColDefault"> Default</div>
-            <div>Vertex label: <input id="vertexLabel" type="text"></input></div>
-            <div>Vertex outline width: <input id="vertexOutlineWidth" type="number"></input></div>
-            <div>Vertex outline colour: <input id="vertexOutlineCol" type="color"></input><input type="checkbox" id="vertexOutlineColDefault"> Default</div>
+            <div id="vertexSettings" class="settings">
+            <div><span>Vertex colour: </span><input id="vertexColour" type="color"></input><input type="checkbox" id="vertexColDefault"><span>Default</span></div>
+            <div><span>Vertex label: </span><input id="vertexLabel" type="text"></input></div>
+            <div><span>Vertex outline width: </span><input id="vertexOutlineWidth" type="number"></input></div>
+            <div><span>Vertex outline colour: </span><input id="vertexOutlineCol" type="color"></input><input type="checkbox" id="vertexOutlineColDefault"><span>Default</span></div>
             </div>
             <div id="defaultSettings" class="settings">
                 Default settings:
-                <div>Edge colour: <input id="defaultEdgeColour" type="color"></input></div>
-                <div>Edge width: <input id="defaultEdgeWidth" type="number"></input></div>
-                <div>Edge dash: <select id="defaultEdgeDash" type="number">
+                <div><span>Edge colour: </span><input id="defaultEdgeColour" type="color"></input></div>
+                <div><span>Edge width: </span><input id="defaultEdgeWidth" type="number"></input></div>
+                <div><span>Edge dash: </span><select id="defaultEdgeDash" type="number">
                     <option value="0">Solid</option>
                     <option value="5,2">Dashed</option>
                     <option value="1,2">Dotted</option>
                 </select></div>
-                <div>Vertex colour: <input id="defaultVertexColour" type="color"></input></div>
-                <div>Vertex outline width: <input id="defaultVertexOutlineWidth" type="number"></input></div>
-                <div>Vertex outline colour: <input id="defaultVertexOutlineCol" type="color"></input></div>
+                <div><span>Vertex colour: </span><input id="defaultVertexColour" type="color"></input></div>
+                <div><span>Vertex outline width: </span><input id="defaultVertexOutlineWidth" type="number"></input></div>
+                <div><span>Vertex outline colour: </span><input id="defaultVertexOutlineCol" type="color"></input></div>
             </div>
         </div>
-        <div id="algorithmsMenu" style="display:none"><div style="padding:5px">
+        <div id="algorithmsMenu"><div style="padding:5px">
             <div>Select algorithm:
         <select id="algorithms">
             <option value="dijkstra">Dijkstra's algorithm</option>
@@ -66,6 +66,7 @@
         <div id="adjMatrixExpander"><div>Adjacency matrix (click to view):</div> <table id="adjMatrix"></table></div>
         <div id="adjListExpander"><div>Adjacency list (click to view):</div> <table id="adjList"></table></div></div>
         </div>
+        <div><div>Graph code:<textarea id="graphCode"></textarea><button onclick="document.getElementById('graphCode').value=getCode()">Export</button><button onclick="importGraph(document.getElementById('graphCode').value)">Import</button></div></div>
         </div>
         </div>
         <p>

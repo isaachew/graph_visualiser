@@ -388,6 +388,7 @@ document.addEventListener("mousemove",e=>{
     }
 })
 document.addEventListener("mouseup",e=>{
+    var changedGraph=false
     if(!dragging&&lastMousePos!=null){
         if(clickTarget!=null){
             if(selectedVertex==null){
@@ -406,6 +407,7 @@ document.addEventListener("mouseup",e=>{
                         if(curEdge.v2>clickTarget)curEdge.v2--
                     }
                     selectedVertex=null
+                    changedGraph=true
                 }
             }else{
                 if(selectedVertex!=clickTarget){
@@ -425,6 +427,7 @@ document.addEventListener("mouseup",e=>{
                     if(canAdd&&curTool=="draw"){
                         curGraph.edges.push({v1:selectedVertex,v2:clickTarget,directed:revEdge})
                         selectedEdge=curGraph.edges.length-1
+                        changedGraph=true
                     }
                 }
                 selectedVertex=null
@@ -432,7 +435,10 @@ document.addEventListener("mouseup",e=>{
         }else{
             selectedVertex=null
             selectedEdge=null
-        if(curTool=="draw")curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
+            if(curTool=="draw"){
+                curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
+                changedGraph=true
+            }
         }
     }
     dragging=0
@@ -457,14 +463,18 @@ document.addEventListener("mouseup",e=>{
         document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
         document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
         document.getElementById("vertexColDefault").checked=curGraph.vertices[selectedVertex].colour==null
-        document.getElementById("vertexOutlineCol").checked=curGraph.vertices[selectedVertex].outlineCol??settings.edge.outlineCol
+        document.getElementById("vertexOutlineWidth").value=curGraph.vertices[selectedVertex].outlineWidth??""
+        document.getElementById("vertexOutlineCol").value=curGraph.vertices[selectedVertex].outlineCol??settings.vertex.outlineCol
         document.getElementById("vertexOutlineColDefault").checked=curGraph.vertices[selectedVertex].outlineCol==null
         //document.getElementById("vertexSize").value=curGraph.edges[selectedEdge].weight
     }else{
         document.getElementById("vertexSettings").style.display="none"
     }
-    if(adjMatrixEnabled)renderMatrix()
-    if(adjListEnabled)renderAdjList()
+    //vertices might have changed
+    if(changedGraph){
+        if(adjMatrixEnabled)renderMatrix()
+        if(adjListEnabled)renderAdjList()
+    }
 })
 
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
@@ -640,6 +650,9 @@ document.getElementById("defaultVertexColour").addEventListener("input",e=>{
 document.getElementById("defaultVertexOutlineCol").addEventListener("input",e=>{
     settings.vertex.outlineCol=e.target.value
 })
+document.getElementById("defaultVertexOutlineWidth").addEventListener("input",e=>{
+    settings.vertex.outlineWidth=e.target.value
+})
 document.getElementById("exportPNG").addEventListener("click",e=>{
     canvas.toBlob(a=>{
         if(a==null)return
@@ -678,7 +691,12 @@ document.getElementById("adjListExpander").firstChild.addEventListener("click",e
     }
 })
 function getCode(){
-    console.log(JSON.stringify({settings:settings,graph:curGraph}))
+    return JSON.stringify({...curGraph,settings:settings})
+}
+function importGraph(code){
+    var obj=JSON.parse(code)
+    settings=Object.assign(settings,obj.settings)
+    curGraph=obj
 }
 [...document.getElementById("tabMenu").children].map((a,b)=>{
     a.onclick=a=>{

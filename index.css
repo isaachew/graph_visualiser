@@ -6,7 +6,13 @@
     padding:5px
 }
 .settings>div{
-    padding:2px
+    padding:2px;
+}
+.settings>div input{
+    vertical-align:middle
+}
+.settings>div span{
+    vertical-align:middle
 }
 #mainContainer{
     display:flex;
@@ -25,13 +31,16 @@
 }
 
 #tabs{
-    flex:1;display:flex;flex-direction:column
-    ;width:0
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    width:0
 }
 #tabs>div+div{
     border:1px solid #aaa;
     flex:1;
     overflow:auto;
+    display:none
 }
 #tabMenu{
     flex:0;display:flex;flex-direction:row;
@@ -60,10 +69,25 @@ table{
     padding:2px
 }
 
-#adjMatrixExpander table,#adjListExpander table{
+:is(#adjMatrixExpander,#adjListExpander) table{
     display:none
 }
 
 :is(#adjMatrixExpander,#adjListExpander).expanded table{
     display:block
+}
+
+#graphCode{
+    display:block;
+    resize:none;
+    width:60%;
+    height:10vh
+}
+
+#tabs>div+div+div+div>div{
+    padding:5px
+}
+
+.settings div{
+    margin-left:20px
 }
