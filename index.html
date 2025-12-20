@@ -66,7 +66,21 @@
         <div id="adjMatrixExpander"><div>Adjacency matrix (click to view):</div> <table id="adjMatrix"></table></div>
         <div id="adjListExpander"><div>Adjacency list (click to view):</div> <table id="adjList"></table></div></div>
         </div>
-        <div><div>Graph code:<textarea id="graphCode"></textarea><button onclick="document.getElementById('graphCode').value=getCode()">Export</button><button onclick="importGraph(document.getElementById('graphCode').value)">Import</button></div></div>
+        <div>
+            <div>
+                Graph code:<textarea id="graphCode"></textarea>
+                <button onclick="document.getElementById('graphCode').value=getCode()">Export</button>
+                <button onclick="importGraph(document.getElementById('graphCode').value)">Import</button>
+                <button id="exportPNG">Export as PNG</button>
+                <button id="exportSVG">Export as SVG</button>
+            </div>
+            <div>
+                Min:<input type="number" id="edgeWeightMin">Max:<input type="number" id="edgeWeightMax">Step:<input type="number" id="edgeWeightStep"><button id="randomiseWeights">Randomise edge weights</button>
+            </div>
+            <div>
+                <button id="reverseEdges">Reverse all edges</button>
+            </div>
+        </div>
         </div>
         </div>
         <p>
@@ -78,7 +92,5 @@
         <button id="deleteButton">Delete</button>
         <button onclick="scale/=2**.5">Zoom in</button>
         <button onclick="scale*=2**.5">Zoom out</button>
-        <button id="exportPNG">Export as PNG</button>
-        <button id="exportSVG">Export as SVG</button>
     </body>
 </html>

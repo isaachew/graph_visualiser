@@ -240,7 +240,7 @@ var algorithms={
         while(dfs_st.length){
             var cur=dfs_st.pop()
             for(var i=0;i<radj[cur].length;i++){
-                steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight}`},{type:"edge",index:radj[cur][i][1],style:{colour:"#0a0"}}])
+                steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight??0} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight??0}`},{type:"edge",index:radj[cur][i][1],style:{colour:"#0a0"}}])
             }
             steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{colour:"red"}}])
 
@@ -263,7 +263,7 @@ var algorithms={
         while(dfs_st.length){
             var cur=dfs_st.pop()
             for(var i=0;i<adj[cur].length;i++){
-                steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight}`},{type:"edge",index:adj[cur][i][1],style:{colour:"#00a"}}])
+                steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight??0} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight??0}`},{type:"edge",index:adj[cur][i][1],style:{colour:"#00a"}}])
             }
             steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{colour:"#ff0"}}])
             for(var i=0;i<radj[cur].length;i++){
@@ -293,7 +293,7 @@ var algorithms={
         for(var i=0;i<curGraph.edges.length;i++){
             adj[curGraph.edges[i].v1].push(i)
             adj[curGraph.edges[i].v2].push(i)
-            swei+=curGraph.edges[i].weight
+            swei+=curGraph.edges[i].weight??1
         }
 
         function gperms(arr){

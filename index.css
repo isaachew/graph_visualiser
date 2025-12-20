@@ -50,13 +50,6 @@
     border-right:1px solid #aaa;
     text-align:center;
 }
-/*button{
-    padding:4px;
-    border-radius:9in;
-    border:red;
-    background:#13a;
-    color:#fff
-}*/
 table{
     border-collapse:collapse
 }
@@ -90,4 +83,16 @@ table{
 
 .settings div{
     margin-left:20px
+}
+
+button{
+    border:1px solid black;
+    background:#eee;
+    padding:4px 6px;
+    margin:2px;
+    font-size:12px;
+    border-radius:9in
+}
+input[type=number]{
+    width:4em
 }

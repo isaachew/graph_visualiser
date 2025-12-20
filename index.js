@@ -706,5 +706,26 @@ function importGraph(code){
         [...document.getElementById("tabs").children][b+1].style.display="block"
     }
 })
+
+
+
+document.getElementById("randomiseWeights").addEventListener("click",e=>{
+    var minw=+document.getElementById("edgeWeightMin").value??1
+    var maxw=+document.getElementById("edgeWeightMax").value??100
+    var wstep=+document.getElementById("edgeWeightStep").value||1
+    for(var i=0;i<curGraph.edges.length;i++){
+        curGraph.edges[i].weight=Math.floor(Math.random()*(maxw-minw+1)/wstep)*wstep+minw
+    }
+    if(adjMatrixEnabled)renderMatrix()
+    if(adjListEnabled)renderAdjList()
+})
+
+document.getElementById("reverseEdges").addEventListener("click",e=>{
+    for(var i=0;i<curGraph.edges.length;i++){
+        [curGraph.edges[i].v1,curGraph.edges[i].v2]=[curGraph.edges[i].v2,curGraph.edges[i].v1]
+    }
+    if(adjMatrixEnabled)renderMatrix()
+    if(adjListEnabled)renderAdjList()
+})
 curGraph.vertices.push({x:0,y:0})
 updateGraph()
