@@ -50,6 +50,8 @@
             <div>Select algorithm:
         <select id="algorithms">
             <option value="dijkstra">Dijkstra's algorithm</option>
+            <option value="dfs">Depth first search</option>
+            <option value="bfs">Breadth first search</option>
             <option value="prim">Prim's algorithm</option>
             <option value="kruskal">Kruskal's algorithm</option>
             <option value="nn">Nearest neighbour algorithm (TSP)</option>
@@ -61,6 +63,7 @@
         <button id="playButton">Pause</button>
         <button id="stepButton">Step</button></div>
         <input id="speedInput" type="range" min="0" max="15" step="any">
+        <span id="numSteps"></span>
         <input type="checkbox" id="outputEnabled">
         <div id="algOutput"></div>
         <div id="adjMatrixExpander"><div>Adjacency matrix (click to view):</div> <table id="adjMatrix"></table></div>
@@ -68,7 +71,7 @@
         </div>
         <div>
             <div>
-                Graph code:<textarea id="graphCode"></textarea>
+                Graph as JSON:<textarea id="graphCode"></textarea>
                 <button onclick="document.getElementById('graphCode').value=getCode()">Export</button>
                 <button onclick="importGraph(document.getElementById('graphCode').value)">Import</button>
                 <button id="exportPNG">Export as PNG</button>

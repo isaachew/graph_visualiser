@@ -2,7 +2,22 @@ var styles={
     dijkstra:{
         considered:{colour:"#aaa",width:1},
         tree:{colour:"green",width:3},
-        path:{colour:"blue",width:3}
+        path:{colour:"blue",width:3},
+
+        vertex:{colour:"red"}
+    },
+    dfs:{
+        considered:{colour:"#aaa",width:1},
+        tree:{colour:"green",width:3},
+        path:{colour:"blue",width:3},
+
+        vertex:{colour:"red"}
+    },
+    bfs:{
+        considered:{colour:"#aaa",width:1},
+        tree:{colour:"green",width:3},
+
+        vertex:{colour:"red"}
     },
     prim:{
         unused:{colour:"#aaa",width:1},
@@ -20,6 +35,11 @@ var styles={
 }
 function getVertexLabel(vert){
     return (curGraph.vertices[vert].label??vert)
+}
+
+function getEdgeLabel(edge){
+    var curEdge=curGraph.edges[edge]
+    return (curEdge.label??(curEdge.v1+"-"+curEdge.v2))
 }
 var algorithms={
     dijkstra(vert,dest){
@@ -41,7 +61,7 @@ var algorithms={
             if(cur[2]!=-1)steps[steps.length-1].push({type:"edge",index:cur[2],style:styles.dijkstra.tree})//shortest path tree
             last[cur[0]]=cur[2]
             dists[cur[0]]=cur[1]
-            steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
+            steps.push([{type:"vertex",index:cur[0],style:styles.dijkstra.vertex}])
             for(var i=0;i<adj[cur[0]].length;i++){
                 var eind=adj[cur[0]][i]
                 var cedge=curGraph.edges[eind]
@@ -67,6 +87,82 @@ var algorithms={
             steps.push([{type:"edge",index:last[dest],style:styles.dijkstra.path}])
             dest=dest^curGraph.edges[last[dest]].v1^curGraph.edges[last[dest]].v2
             //await new Promise(a=>setTimeout(a,400))
+        }
+        return steps
+    },
+    dfs(vert){
+        var st=[]
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            if(!curGraph.edges[i].directed)adj[curGraph.edges[i].v2].push(i)
+        }
+        var visited=curGraph.vertices.map(a=>0)
+        st.push([vert,-1,-1])
+        while(st.length){
+            var cur=st.pop()
+            if(cur[0]==-1){
+                steps.push([{type:"output",text:"Leaving vertex "+getVertexLabel(cur[2])}])
+                console.log(cur[1])
+                if(cur[1]!=-1)steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:"red"}})
+                continue
+            }
+            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))},{type:"vertex",index:cur[0],style:{colour:"blue"}}])
+            if(cur[1]!=-1){
+                steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:visited[cur[0]]?"#aaa":"green"}})
+            }
+            if(visited[cur[0]]){
+                steps[steps.length-1].push({type:"output",text:"Already visited"})
+                continue
+            }
+            visited[cur[0]]=1
+            st.push([-1,cur[1],cur[0]])
+            for(var i=0;i<adj[cur[0]].length;i++){
+                var curEdge=curGraph.edges[adj[cur[0]][i]]
+                if(adj[cur[0]][i]==cur[1])continue
+                //steps.push([{type:"output",text:"Visiting edge "+getEdgeLabel(adj[cur[0]][i])}])
+                if(curEdge.v1==cur[0]){
+                    st.push([curEdge.v2,adj[cur[0]][i],cur[0]])
+                }else if(curEdge.v2==cur[0]&&!curEdge.directed){
+                    st.push([curEdge.v1,adj[cur[0]][i],cur[0]])
+                }
+            }
+        }
+        return steps
+    },
+    bfs(vert){
+        var st=[]
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            if(!curGraph.edges[i].directed)adj[curGraph.edges[i].v2].push(i)
+        }
+        var visited=curGraph.vertices.map(a=>0)
+        st.push([vert,-1,-1])
+        var ind=0
+        while(st.length>ind){
+            var cur=st[ind++]
+            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))},{type:"vertex",index:cur[0],style:{colour:"blue"}}])
+            if(cur[1]!=-1){
+                steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:visited[cur[0]]?"#aaa":"red"}})
+            }
+            if(visited[cur[0]]){
+                steps[steps.length-1].push({type:"output",text:"Already visited"})
+                continue
+            }
+            visited[cur[0]]=1
+            for(var i=0;i<adj[cur[0]].length;i++){
+                var curEdge=curGraph.edges[adj[cur[0]][i]]
+                if(adj[cur[0]][i]==cur[1])continue
+                //steps.push([{type:"output",text:"Visiting edge "+getEdgeLabel(adj[cur[0]][i])}])
+                if(curEdge.v1==cur[0]){
+                    st.push([curEdge.v2,adj[cur[0]][i],cur[0]])
+                }else if(curEdge.v2==cur[0]&&!curEdge.directed){
+                    st.push([curEdge.v1,adj[cur[0]][i],cur[0]])
+                }
+            }
         }
         return steps
     },
@@ -130,11 +226,11 @@ var algorithms={
         for(var i=0;i<curGraph.edges.length;i++){
             var eind=eorder[i]
             var curEdge=curGraph.edges[eind]
-            steps.push([{type:"edge",index:eind,style:styles.kruskal.considered},{type:"output",text:"Considering edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)+" (weight "+(curEdge.weight??1)+")"}])
+            steps.push([{type:"edge",index:eind,style:styles.kruskal.considered},{type:"output",text:"Considering edge "+getEdgeLabel(eind)+" (weight "+(curEdge.weight??1)+")"}])
             if(merge(curEdge.v1,curEdge.v2)){
-                steps.push([{type:"edge",index:eind,style:styles.kruskal.used},{type:"output",text:"Added edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)}])
+                steps.push([{type:"edge",index:eind,style:styles.kruskal.used},{type:"output",text:"Added edge "+getEdgeLabel(eind)}])
             }else{
-                steps.push([{type:"edge",index:eind,style:styles.kruskal.unused},{type:"output",text:"Unable to add edge "+getVertexLabel(curEdge.v1)+"-"+getVertexLabel(curEdge.v2)}])
+                steps.push([{type:"edge",index:eind,style:styles.kruskal.unused},{type:"output",text:"Unable to add edge "+getEdgeLabel(eind)}])
             }
         }
         return steps
@@ -280,7 +376,7 @@ var algorithms={
                 var lt=lts[curGraph.edges[i].v2]
                 var et=ets[curGraph.edges[i].v1]
                 var wei=curGraph.edges[i].weight
-                steps.push([{type:"output",text:"Edge "+curGraph.edges[i].label+` float ${lt}-${et}-${wei}=`+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
+                steps.push([{type:"output",text:"Edge "+getEdgeLabel(i)+` float ${lt}-${et}-${wei}=`+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
             }
         }
 

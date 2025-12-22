@@ -19,6 +19,7 @@ setInterval(()=>{
             }
         }
     }
+    document.getElementById("numSteps").textContent=Math.min(Math.ceil(targ),animSteps.length)+"/"+animSteps.length
     if(lastTime!=null){
         targ+=(+new Date-lastTime)*speed/1000
         lastTime=+new Date
