@@ -8,10 +8,11 @@ var styles={
     },
     dfs:{
         considered:{colour:"#aaa",width:1},
-        tree:{colour:"green",width:3},
+        tree:{colour:"red",width:3},
         path:{colour:"blue",width:3},
 
-        vertex:{colour:"red"}
+        vertex:{colour:"red"},
+        vertexPath:{colour:"blue",width:3}
     },
     bfs:{
         considered:{colour:"#aaa",width:1},
@@ -103,18 +104,19 @@ var algorithms={
         while(st.length){
             var cur=st.pop()
             if(cur[0]==-1){
-                steps.push([{type:"output",text:"Leaving vertex "+getVertexLabel(cur[2])}])
-                console.log(cur[1])
-                if(cur[1]!=-1)steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:"red"}})
+                steps.push([{type:"output",text:"Leaving vertex "+getVertexLabel(cur[2])},{type:"vertex",index:cur[2],style:styles.dfs.vertex}])
+                if(cur[1]!=-1)steps[steps.length-1].push({type:"edge",index:cur[1],style:styles.dfs.tree})
                 continue
             }
-            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))},{type:"vertex",index:cur[0],style:{colour:"blue"}}])
+            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))}])
             if(cur[1]!=-1){
-                steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:visited[cur[0]]?"#aaa":"green"}})
+                steps[steps.length-1].push({type:"edge",index:cur[1],style:visited[cur[0]]?styles.dfs.considered:styles.dfs.path})
             }
             if(visited[cur[0]]){
                 steps[steps.length-1].push({type:"output",text:"Already visited"})
                 continue
+            }else{
+                steps[steps.length-1].push({type:"vertex",index:cur[0],style:styles.dfs.vertexPath})
             }
             visited[cur[0]]=1
             st.push([-1,cur[1],cur[0]])
