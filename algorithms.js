@@ -146,9 +146,9 @@ var algorithms={
         var ind=0
         while(st.length>ind){
             var cur=st[ind++]
-            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))},{type:"vertex",index:cur[0],style:{colour:"blue"}}])
+            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(cur[0])+(cur[2]==-1?"":" from vertex "+getVertexLabel(cur[2]))},{type:"vertex",index:cur[0],style:styles.bfs.vertex}])
             if(cur[1]!=-1){
-                steps[steps.length-1].push({type:"edge",index:cur[1],style:{colour:visited[cur[0]]?"#aaa":"red"}})
+                steps[steps.length-1].push({type:"edge",index:cur[1],style:visited[cur[0]]?styles.bfs.considered:styles.bfs.tree})
             }
             if(visited[cur[0]]){
                 steps[steps.length-1].push({type:"output",text:"Already visited"})
