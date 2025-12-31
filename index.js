@@ -408,6 +408,10 @@ document.addEventListener("mouseup",e=>{
                     }
                     selectedVertex=null
                     changedGraph=true
+                }else if(curTool=="algorithm"&&curAlgParamTypes[curAlgParams.length].type=="vertex"){
+                    curAlgParams.push(clickTarget)
+                    selectedVertex=null
+                    algEnterParam()
                 }
             }else{
                 if(selectedVertex!=clickTarget){
@@ -428,6 +432,10 @@ document.addEventListener("mouseup",e=>{
                         curGraph.edges.push({v1:selectedVertex,v2:clickTarget,directed:revEdge})
                         selectedEdge=curGraph.edges.length-1
                         changedGraph=true
+                    }else if(!canAdd&&curTool=="algorithm"&&curAlgParamTypes[curAlgParams.length].type=="edge"){
+                        curAlgParams.push(selectedEdge)
+                        selectedEdge=null
+                        algEnterParam()
                     }
                 }
                 selectedVertex=null
@@ -519,13 +527,30 @@ document.getElementById("drawCanvas").addEventListener("keydown",e=>{
 document.getElementById("deleteButton").addEventListener("click",e=>{
     deleteSelection()
 })
-
-document.getElementById("runAlgorithm").addEventListener("click",e=>{
-    if(selectedVertex!=null){
-        var selectedAlgorithm=document.getElementById("algorithms").value
-        animSteps=algorithms[selectedAlgorithm](selectedVertex)
-        startAnim()
+var selectedAlgorithm=null
+var curAlgParams=[]
+var curAlgParamTypes=[]
+function runAlgorithm(alg,params){
+    animSteps=algorithms[alg](...params)
+    startAnim()
+    curTool="draw"
+}
+function algEnterParam(){//requests parameter or runs algorithm
+    if(curAlgParamTypes.length==curAlgParams.length){
+        runAlgorithm(selectedAlgorithm,curAlgParams)
+    }else{
+        var dvEl=document.createElement("div")
+        dvEl.append("Select "+algParams[selectedAlgorithm][curAlgParams.length].name)
+        document.getElementById("algOutput").append(dvEl)
     }
+}
+document.getElementById("runAlgorithm").addEventListener("click",e=>{
+    selectedAlgorithm=document.getElementById("algorithms").value
+    curTool="algorithm"
+    curAlgParams=[]
+    curAlgParamTypes=algParams[selectedAlgorithm]
+    document.getElementById("algOutput").textContent=""
+    algEnterParam()
 })
 document.getElementById("clearAnim").addEventListener("click",e=>{
     clearAnim()

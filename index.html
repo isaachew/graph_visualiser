@@ -62,7 +62,7 @@
         <button id="clearAnim">Reset</button>
         <button id="playButton">Pause</button>
         <button id="stepButton">Step</button></div>
-        <input id="speedInput" type="range" min="0" max="15" step="any">
+        <div>Speed:<input id="speedInput" type="range" min="0" max="15" step="any"></div>
         <span id="numSteps"></span>
         <input type="checkbox" id="outputEnabled">
         <div id="algOutput"></div>
@@ -77,9 +77,7 @@
                 <button id="exportPNG">Export as PNG</button>
                 <button id="exportSVG">Export as SVG</button>
             </div>
-            <div>
-                Min:<input type="number" id="edgeWeightMin">Max:<input type="number" id="edgeWeightMax">Step:<input type="number" id="edgeWeightStep"><button id="randomiseWeights">Randomise edge weights</button>
-            </div>
+            <div>Min: <input type="number" id="edgeWeightMin" value="1"> Max: <input type="number" id="edgeWeightMax" value="100"> Step: <input type="number" id="edgeWeightStep" value="1"><button id="randomiseWeights">Randomise edge weights</button></div>
             <div>
                 <button id="reverseEdges">Reverse all edges</button>
             </div>

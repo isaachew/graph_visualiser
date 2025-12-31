@@ -42,6 +42,16 @@ function getEdgeLabel(edge){
     var curEdge=curGraph.edges[edge]
     return (curEdge.label??(curEdge.v1+"-"+curEdge.v2))
 }
+var algParams={
+    dijkstra:[{type:"vertex",name:"starting vertex"},{type:"vertex",name:"ending vertex"}],
+    dfs:[{type:"vertex",name:"starting vertex"}],
+    bfs:[{type:"vertex",name:"starting vertex"}],
+    prim:[{type:"vertex",name:"starting vertex"}],
+    kruskal:[],
+    nn:[{type:"vertex",name:"starting vertex"}],
+    rip:[{type:"vertex",name:"starting vertex"}],
+    cpa:[]
+}
 var algorithms={
     dijkstra(vert,dest){
         var pq=new Heap((a,b)=>a[1]<b[1])
@@ -340,7 +350,7 @@ var algorithms={
             for(var i=0;i<radj[cur].length;i++){
                 steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight??0} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight??0}`},{type:"edge",index:radj[cur][i][1],style:{colour:"#0a0"}}])
             }
-            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{colour:"red"}}])
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{colour:"red",label:getVertexLabel(cur)+" ("+ets[cur]+")"}}])
 
             for(var i=0;i<adj[cur].length;i++){
                 var nxt=adj[cur][i]
@@ -363,7 +373,7 @@ var algorithms={
             for(var i=0;i<adj[cur].length;i++){
                 steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight??0} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight??0}`},{type:"edge",index:adj[cur][i][1],style:{colour:"#00a"}}])
             }
-            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{colour:"#ff0"}}])
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{colour:"#ff0",label:getVertexLabel(cur)+" ("+ets[cur]+"|"+lts[cur]+")"}}])
             for(var i=0;i<radj[cur].length;i++){
                 var nxt=radj[cur][i]
                 outdegs[nxt[0]]--
@@ -378,7 +388,7 @@ var algorithms={
                 var lt=lts[curGraph.edges[i].v2]
                 var et=ets[curGraph.edges[i].v1]
                 var wei=curGraph.edges[i].weight
-                steps.push([{type:"output",text:"Edge "+getEdgeLabel(i)+` float ${lt}-${et}-${wei}=`+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
+                steps.push([{type:"output",text:"Edge "+getEdgeLabel(i)+` float ${lt} - ${et} - ${wei} = `+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
             }
         }
 

@@ -1,3 +1,7 @@
+body{
+    margin:0
+}
+
 #drawCanvas{
     border:1px solid black;
     outline:none
