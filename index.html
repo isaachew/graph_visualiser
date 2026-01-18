@@ -10,7 +10,15 @@
     </head>
     <body style="font-family:sans-serif">
         <div id="mainContainer">
-        <canvas id="drawCanvas" tabindex="0"></canvas>
+            <div style="display:flex;flex-direction:column">
+            <div id="toolbar">
+                <button id="drawModeButton" class="selected">Draw</button>
+                <button id="deleteModeButton">Delete</button>
+                <button id="deleteButton">Delete</button>
+                <button onclick="scale/=2**.5">Zoom in</button>
+                <button onclick="scale*=2**.5">Zoom out</button>
+            </div>
+        <canvas id="drawCanvas" tabindex="0"></canvas></div>
         <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div><div>Graph</div></div>
         <div id="settingsMenu" style="display:block">
             <div id="edgeSettings" class="settings">
@@ -33,7 +41,7 @@
             <div><span>Vertex outline colour: </span><input id="vertexOutlineCol" type="color"></input><input type="checkbox" id="vertexOutlineColDefault"><span>Default</span></div>
             </div>
             <div id="defaultSettings" class="settings">
-                Default settings:
+                <div id="settingsTitle">Default settings:</div>
                 <div><span>Edge colour: </span><input id="defaultEdgeColour" type="color"></input></div>
                 <div><span>Edge width: </span><input id="defaultEdgeWidth" type="number"></input></div>
                 <div><span>Edge dash: </span><select id="defaultEdgeDash" type="number">
@@ -47,24 +55,26 @@
             </div>
         </div>
         <div id="algorithmsMenu"><div style="padding:5px">
-            <div>Select algorithm:
-        <select id="algorithms">
-            <option value="dijkstra">Dijkstra's algorithm</option>
-            <option value="dfs">Depth first search</option>
-            <option value="bfs">Breadth first search</option>
-            <option value="prim">Prim's algorithm</option>
-            <option value="kruskal">Kruskal's algorithm</option>
-            <option value="nn">Nearest neighbour algorithm (TSP)</option>
-            <option value="cpa">Critical path analysis</option>
-            <option value="rip">Route inspection problem</option>
-        </select>
+        <div>Select algorithm:
+            <select id="algorithms">
+                <option value="dijkstra">Dijkstra's algorithm</option>
+                <option value="dfs">Depth first search</option>
+                <option value="bfs">Breadth first search</option>
+                <option value="prim">Prim's algorithm</option>
+                <option value="kruskal">Kruskal's algorithm</option>
+                <option value="nn">Nearest neighbour algorithm (TSP)</option>
+                <option value="cpa">Critical path analysis</option>
+                <option value="rip">Route inspection problem</option>
+            </select>
+        </div>
+        <div>
         <button id="runAlgorithm">Run algorithm</button>
         <button id="clearAnim">Reset</button>
-        <button id="playButton">Pause</button>
+        <button id="playButton" style="width:50px">Play</button>
         <button id="stepButton">Step</button></div>
         <div>Speed:<input id="speedInput" type="range" min="0" max="15" step="any"></div>
         <span id="numSteps"></span>
-        <input type="checkbox" id="outputEnabled">
+        <span>Enable output:</span><input type="checkbox" id="outputEnabled">
         <div id="algOutput"></div>
         <div id="adjMatrixExpander"><div>Adjacency matrix (click to view):</div> <table id="adjMatrix"></table></div>
         <div id="adjListExpander"><div>Adjacency list (click to view):</div> <table id="adjList"></table></div></div>
@@ -89,9 +99,5 @@
             Left-click on two vertices to create an edge between them.
             Vertices are draggable.
         </p>
-        <button id="deleteModeButton">delete</button>
-        <button id="deleteButton">Delete</button>
-        <button onclick="scale/=2**.5">Zoom in</button>
-        <button onclick="scale*=2**.5">Zoom out</button>
     </body>
 </html>

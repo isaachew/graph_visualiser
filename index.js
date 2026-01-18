@@ -485,15 +485,15 @@ document.addEventListener("mouseup",e=>{
     }
 })
 
+document.getElementById("drawModeButton").addEventListener("click",e=>{
+    document.getElementById("deleteModeButton").classList.remove("selected")
+    document.getElementById("drawModeButton").classList.add("selected")
+    curTool="draw"
+})
 document.getElementById("deleteModeButton").addEventListener("click",e=>{
-    if(curTool=="delete"){
-        curTool="draw"
-        e.target.textContent="delete"
-    }else{
-        curTool="delete"
-        e.target.textContent="draw"
-        selectedVertex=null
-    }
+    document.getElementById("drawModeButton").classList.remove("selected")
+    document.getElementById("deleteModeButton").classList.add("selected")
+    curTool="delete"
 })
 
 function deleteSelection(){
@@ -732,7 +732,7 @@ function importGraph(code){
     }
 })
 
-
+window.addEventListener("beforeunload",e=>{e.preventDefault;return true})
 
 document.getElementById("randomiseWeights").addEventListener("click",e=>{
     var minw=+document.getElementById("edgeWeightMin").value??1
