@@ -5,7 +5,9 @@
 - Export as PNG/SVG
 - User interface
 - Directed edges (render arrows)
+- Undo/redo
 
+- Support on mobile
 
 - Support for multigraphs
 - Graph generation

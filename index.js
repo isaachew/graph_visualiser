@@ -132,8 +132,12 @@ function renderGraph(){
         }
     }
 }
+function renderReps(){
+    renderAdjList()
+    renderMatrix()
+}
 function renderMatrix(){
-
+    if(!adjMatrixEnabled)return
     var mat=document.getElementById("adjMatrix")
     mat.textContent=""
     var hr=document.createElement("tr")
@@ -448,6 +452,8 @@ document.addEventListener("mouseup",e=>{
                 changedGraph=true
             }
         }
+    }else if(dragging&&clickTarget!=null){
+        pushUndo()
     }
     dragging=0
     dragIndex=null
@@ -480,8 +486,8 @@ document.addEventListener("mouseup",e=>{
     }
     //vertices might have changed
     if(changedGraph){
-        if(adjMatrixEnabled)renderMatrix()
-        if(adjListEnabled)renderAdjList()
+        pushUndo()
+        renderReps()
     }
 })
 
@@ -516,12 +522,44 @@ function deleteSelection(){
         selectedVertex=null
     }
 
-    if(adjMatrixEnabled)renderMatrix()
-    if(adjListEnabled)renderAdjList()
+    renderReps()
+}
+var undoInd=-1
+var undoStack=[]
+function pushUndo(){
+    undoStack.length=undoInd+1
+    undoInd=undoStack.length
+    var newGraph=JSON.stringify({...curGraph,settings:settings})
+    undoStack.push(newGraph)//why
 }
 document.getElementById("drawCanvas").addEventListener("keydown",e=>{
     if(e.key=="Backspace"){
         deleteSelection()
+        pushUndo()
+    }else if(e.code=="KeyZ"&&e.metaKey&&e.shiftKey){
+        if(undoInd<undoStack.length-1){
+            undoInd++
+            curGraph=JSON.parse(undoStack[undoInd])
+            settings=curGraph.settings
+        }
+        renderReps()
+        selectedVertex=null
+        selectedEdge=null
+        e.preventDefault()
+    }else if(e.code=="KeyZ"&&e.metaKey&&!e.shiftKey){
+        if(undoInd==undoStack.length-1){//make sure latest version of graph is on the stack
+            var newGraph=JSON.stringify({...curGraph,settings:settings})
+            undoStack[undoStack.length-1]=newGraph
+        }
+        if(undoInd){
+            undoInd--
+            curGraph=JSON.parse(undoStack[undoInd])
+            settings=curGraph.settings
+        }
+        renderReps()
+        selectedVertex=null
+        selectedEdge=null
+        e.preventDefault()
     }
 })
 document.getElementById("deleteButton").addEventListener("click",e=>{
@@ -560,8 +598,8 @@ document.getElementById("edgeWeight").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].weight=e.target.value!=""?+e.target.value:null
     }
-    if(adjMatrixEnabled)renderMatrix()
-    if(adjListEnabled)renderAdjList()
+    pushUndo()
+    renderReps()
 })
 document.getElementById("vertexColour").addEventListener("input",e=>{
     if(selectedVertex!=null){
@@ -693,7 +731,6 @@ document.getElementById("exportSVG").addEventListener("click",e=>{
     renderGraphSVG()
 })
 document.getElementById("adjMatrixExpander").firstChild.addEventListener("click",e=>{
-    console.log("hi")
     if(!adjMatrixEnabled){
         adjMatrixEnabled=1
         document.getElementById("adjMatrixExpander").classList.add("expanded")
@@ -722,6 +759,8 @@ function importGraph(code){
     var obj=JSON.parse(code)
     settings=Object.assign(settings,obj.settings)
     curGraph=obj
+    pushUndo()
+    renderReps()
 }
 [...document.getElementById("tabMenu").children].map((a,b)=>{
     a.onclick=a=>{
@@ -741,16 +780,17 @@ document.getElementById("randomiseWeights").addEventListener("click",e=>{
     for(var i=0;i<curGraph.edges.length;i++){
         curGraph.edges[i].weight=Math.floor(Math.random()*(maxw-minw+1)/wstep)*wstep+minw
     }
-    if(adjMatrixEnabled)renderMatrix()
-    if(adjListEnabled)renderAdjList()
+    pushUndo()
+    renderReps()
 })
 
 document.getElementById("reverseEdges").addEventListener("click",e=>{
     for(var i=0;i<curGraph.edges.length;i++){
         [curGraph.edges[i].v1,curGraph.edges[i].v2]=[curGraph.edges[i].v2,curGraph.edges[i].v1]
     }
-    if(adjMatrixEnabled)renderMatrix()
-    if(adjListEnabled)renderAdjList()
+    pushUndo()
+    renderReps()
 })
 curGraph.vertices.push({x:0,y:0})
 updateGraph()
+pushUndo()
