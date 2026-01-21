@@ -353,7 +353,6 @@ function updateGraph(){
         curGraph.vertices[dragIndex].y=mousePos[1]
     }
     renderGraph()
-    requestAnimationFrame(updateGraph)
 }
 document.getElementById("drawCanvas").addEventListener("mousedown",e=>{
     clickTarget=null
@@ -390,6 +389,7 @@ document.addEventListener("mousemove",e=>{
         camPos[0]-=posDiff[0]/width*scale
         camPos[1]-=posDiff[1]/width*scale
     }
+    if(dragging)updateGraph()
 })
 document.addEventListener("mouseup",e=>{
     var changedGraph=false
@@ -455,6 +455,8 @@ document.addEventListener("mouseup",e=>{
     }else if(dragging&&clickTarget!=null){
         pushUndo()
     }
+
+    if(lastMousePos!=null)updateGraph()
     dragging=0
     dragIndex=null
     clickTarget=null
@@ -523,6 +525,7 @@ function deleteSelection(){
     }
 
     renderReps()
+    updateGraph()
 }
 var undoInd=-1
 var undoStack=[]
@@ -530,17 +533,19 @@ function pushUndo(){
     undoStack.length=undoInd+1
     undoInd=undoStack.length
     var newGraph=JSON.stringify({...curGraph,settings:settings})
-    undoStack.push(newGraph)//why
+    undoStack.push(newGraph)
 }
 document.getElementById("drawCanvas").addEventListener("keydown",e=>{
     if(e.key=="Backspace"){
         deleteSelection()
+        updateGraph()
         pushUndo()
     }else if(e.code=="KeyZ"&&e.metaKey&&e.shiftKey){
         if(undoInd<undoStack.length-1){
             undoInd++
             curGraph=JSON.parse(undoStack[undoInd])
             settings=curGraph.settings
+            updateGraph()
         }
         renderReps()
         selectedVertex=null
@@ -555,6 +560,7 @@ document.getElementById("drawCanvas").addEventListener("keydown",e=>{
             undoInd--
             curGraph=JSON.parse(undoStack[undoInd])
             settings=curGraph.settings
+            updateGraph()
         }
         renderReps()
         selectedVertex=null
@@ -624,18 +630,21 @@ document.getElementById("vertexLabel").addEventListener("input",e=>{
     if(selectedVertex!=null){
         curGraph.vertices[selectedVertex].label=e.target.value||null
         if(curGraph.vertices[selectedVertex].label==null)delete curGraph.vertices[selectedVertex].label
+        updateGraph()
     }
 })
 document.getElementById("vertexOutlineWidth").addEventListener("input",e=>{
     if(selectedVertex!=null){
         curGraph.vertices[selectedVertex].outlineWidth=e.target.value||null
         if(curGraph.vertices[selectedVertex].outlineWidth==null)delete curGraph.vertices[selectedVertex].outlineWidth
+        updateGraph()
     }
 })
 document.getElementById("vertexOutlineCol").addEventListener("input",e=>{
     if(selectedVertex!=null){
         curGraph.vertices[selectedVertex].outlineCol=e.target.value||null
         if(curGraph.vertices[selectedVertex].outlineCol==null)delete curGraph.vertices[selectedVertex].outlineCol
+        updateGraph()
     }
 })
 document.getElementById("vertexOutlineColDefault").addEventListener("input",e=>{
@@ -647,12 +656,14 @@ document.getElementById("vertexOutlineColDefault").addEventListener("input",e=>{
             delete curGraph.vertices[selectedVertex].outlineCol
             document.getElementById("vertexOutlineCol").value=settings.vertex.outlineCol
         }
+        updateGraph()
     }
 })
 document.getElementById("edgeColour").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].colour=e.target.value
         document.getElementById("edgeColDefault").checked=false
+        updateGraph()
     }
 })
 document.getElementById("edgeColDefault").addEventListener("input",e=>{
@@ -664,24 +675,28 @@ document.getElementById("edgeColDefault").addEventListener("input",e=>{
             delete curGraph.edges[selectedEdge].colour
             document.getElementById("edgeColour").value=settings.edge.colour
         }
+        updateGraph()
     }
 })
 document.getElementById("edgeDash").addEventListener("input",e=>{
     if(selectedEdge!=null){
         if(e.target.value!="default")curGraph.edges[selectedEdge].dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
         else delete curGraph.edges[selectedEdge].dash
+        updateGraph()
     }
 })
 document.getElementById("edgeWidth").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].width=e.target.value||null
         if(curGraph.edges[selectedEdge].width==null)delete curGraph.edges[selectedEdge].width
+        updateGraph()
     }
 })
 document.getElementById("edgeLabel").addEventListener("input",e=>{
     if(selectedEdge!=null){
         curGraph.edges[selectedEdge].label=e.target.value||null
         if(curGraph.edges[selectedEdge].label==null)delete curGraph.edges[selectedEdge].label
+        updateGraph()
     }
 })
 document.getElementById("edgeDirected").addEventListener("input",e=>{
@@ -696,25 +711,32 @@ document.getElementById("edgeDirected").addEventListener("input",e=>{
         }
         curGraph.edges[selectedEdge].directed=e.target.checked
         if(curGraph.edges[selectedEdge].directed==false)delete curGraph.edges[selectedEdge].directed
+        updateGraph()
     }
 })
 document.getElementById("defaultEdgeColour").addEventListener("input",e=>{
     settings.edge.colour=e.target.value
+    updateGraph()
 })
 document.getElementById("defaultEdgeWidth").addEventListener("input",e=>{
     settings.edge.width=e.target.value
+    updateGraph()
 })
 document.getElementById("defaultEdgeDash").addEventListener("input",e=>{
     settings.edge.dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
+    updateGraph()
 })
 document.getElementById("defaultVertexColour").addEventListener("input",e=>{
     settings.vertex.colour=e.target.value
+    updateGraph()
 })
 document.getElementById("defaultVertexOutlineCol").addEventListener("input",e=>{
     settings.vertex.outlineCol=e.target.value
+    updateGraph()
 })
 document.getElementById("defaultVertexOutlineWidth").addEventListener("input",e=>{
     settings.vertex.outlineWidth=e.target.value
+    updateGraph()
 })
 document.getElementById("exportPNG").addEventListener("click",e=>{
     canvas.toBlob(a=>{
@@ -761,6 +783,7 @@ function importGraph(code){
     curGraph=obj
     pushUndo()
     renderReps()
+    updateGraph()
 }
 [...document.getElementById("tabMenu").children].map((a,b)=>{
     a.onclick=a=>{
@@ -782,6 +805,7 @@ document.getElementById("randomiseWeights").addEventListener("click",e=>{
     }
     pushUndo()
     renderReps()
+    updateGraph()
 })
 
 document.getElementById("reverseEdges").addEventListener("click",e=>{
@@ -790,6 +814,7 @@ document.getElementById("reverseEdges").addEventListener("click",e=>{
     }
     pushUndo()
     renderReps()
+    updateGraph()
 })
 curGraph.vertices.push({x:0,y:0})
 updateGraph()

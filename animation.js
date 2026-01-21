@@ -3,9 +3,14 @@ var speed=10
 var animSteps=[]
 var lastTime=null
 var outputEnabled=true
-setInterval(()=>{
+
+var animFrame=null
+function updateAnim(){
+    animFrame=null
+    var stepped=false
     try{
         for(;progress<targ&&progress<animSteps.length;progress++){
+            stepped=true
             for(var j of animSteps[progress]){
                 if(j.type=="vertex"){
                     curGraph.vertices[j.index].style=j.style
@@ -23,21 +28,27 @@ setInterval(()=>{
     }catch(e){
         console.log("Error:",e)
         lastTime=null
-        targ=0
+        targ=progress
     }
-    document.getElementById("numSteps").textContent=Math.min(Math.ceil(targ),animSteps.length)+"/"+animSteps.length
     if(lastTime!=null){
         targ+=(+new Date-lastTime)*speed/1000
         lastTime=+new Date
     }
-},10)
+    if(stepped){
+        document.getElementById("numSteps").textContent=Math.min(Math.ceil(targ),animSteps.length)+"/"+animSteps.length
+        updateGraph()
+    }
+    if(progress<animSteps.length)animFrame=requestAnimationFrame(updateAnim)
+}
 function clearAnim(){
     curGraph.edges.map(a=>{delete a.style});curGraph.vertices.map(a=>{delete a.style})
     targ=0
     progress=0
     lastTime=null
+    document.getElementById("numSteps").textContent=0+"/"+animSteps.length
     document.getElementById("playButton").textContent="Play"
     document.getElementById("algOutput").textContent=""
+    updateGraph()
 }
 function startAnim(){
     clearAnim()
@@ -45,11 +56,14 @@ function startAnim(){
     document.getElementById("playButton").textContent="Pause"
     progress=0
     targ=0
+    document.getElementById("numSteps").textContent=0+"/"+animSteps.length
+    if(animFrame==null)updateAnim()
 }
 document.getElementById("playButton").addEventListener("click",e=>{
     if(lastTime==null){
         lastTime=+new Date
         e.target.textContent="Pause"
+        if(animFrame==null)updateAnim()
     }else{
         lastTime=null
         e.target.textContent="Play"
@@ -57,6 +71,7 @@ document.getElementById("playButton").addEventListener("click",e=>{
 })
 document.getElementById("stepButton").addEventListener("click",e=>{
     targ++
+    if(animFrame==null)updateAnim()
 })
 document.getElementById("speedInput").addEventListener("input",e=>{
     speed=2**e.target.value

@@ -15,8 +15,8 @@
                 <button id="drawModeButton" class="selected">Draw</button>
                 <button id="deleteModeButton">Delete</button>
                 <button id="deleteButton">Delete</button>
-                <button onclick="scale/=2**.5">Zoom in</button>
-                <button onclick="scale*=2**.5">Zoom out</button>
+                <button onclick="scale/=2**.5;updateGraph()">Zoom in</button>
+                <button onclick="scale*=2**.5;updateGraph()">Zoom out</button>
             </div>
         <canvas id="drawCanvas" tabindex="0"></canvas></div>
         <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div><div>Graph</div></div>
