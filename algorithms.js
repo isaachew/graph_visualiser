@@ -3,7 +3,6 @@ var styles={
         considered:{colour:"#aaa",width:1},
         tree:{colour:"green",width:3},
         path:{colour:"blue",width:3},
-
         vertex:{colour:"red"}
     },
     dfs:{
@@ -17,13 +16,13 @@ var styles={
     bfs:{
         considered:{colour:"#aaa",width:1},
         tree:{colour:"green",width:3},
-
         vertex:{colour:"red"}
     },
     prim:{
         unused:{colour:"#aaa",width:1},
         used:{colour:"green",width:3},
-        considered:{colour:"red"}
+        considered:{colour:"red"},
+        vertex:{colour:"red"}
     },
     kruskal:{
         considered:{colour:"red"},
@@ -32,6 +31,20 @@ var styles={
     },
     nn:{
         path:{colour:"blue",width:3}
+    },
+    cpa:{
+        forward:{colour:"#f00"},
+        backward:{colour:"#0f0"},
+        vertexForward:{colour:"#f00"},
+        vertexBackward:{colour:"#ff0"},
+        critical:{colour:"#f00"},
+        edge:{colour:"#00f"}
+    },
+    rip:{
+        paired:{colour:"red"},
+        path:{colour:"#ff0000",width:2},
+        repeated:{colour:"#ffcc00",width:2},
+        repeat3:{colour:"#0000ff",width:2}
     }
 }
 function getVertexLabel(vert){
@@ -49,7 +62,7 @@ var algParams={
     prim:[{type:"vertex",name:"starting vertex"}],
     kruskal:[],
     nn:[{type:"vertex",name:"starting vertex"}],
-    rip:[{type:"vertex",name:"starting vertex"}],
+    rip:[{type:"vertex",name:"starting vertex"},{type:"vertex",name:"ending vertex"}],
     cpa:[]
 }
 var algorithms={
@@ -202,7 +215,7 @@ var algorithms={
                 steps.push([{type:"output",text:"Adding vertex "+getVertexLabel(cur[0])+" (weight "+cur[1]+" from vertex "+getVertexLabel(prevVertex)+")"},{type:"edge",index:cur[2],style:styles.prim.used}])
             }
             clast=cur[0]
-            steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
+            steps.push([{type:"vertex",index:cur[0],style:styles.prim.vertex}])
             for(var i=0;i<adj[cur[0]].length;i++){
                 var eind=adj[cur[0]][i]
                 var cedge=curGraph.edges[eind]
@@ -348,9 +361,9 @@ var algorithms={
         while(dfs_st.length){
             var cur=dfs_st.pop()
             for(var i=0;i<radj[cur].length;i++){
-                steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight??0} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight??0}`},{type:"edge",index:radj[cur][i][1],style:{colour:"#0a0"}}])
+                steps.push([{type:"output",text:`${ets[radj[cur][i][0]]} + ${curGraph.edges[radj[cur][i][1]].weight??0} = ${ets[radj[cur][i][0]]+curGraph.edges[radj[cur][i][1]].weight??0}`},{type:"edge",index:radj[cur][i][1],style:styles.cpa.forward}])
             }
-            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{colour:"red",label:getVertexLabel(cur)+" ("+ets[cur]+")"}}])
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" early time = "+ets[cur]},{type:"vertex",index:cur,style:{...styles.cpa.vertexForward,label:getVertexLabel(cur)+" ("+ets[cur]+")"}}])
 
             for(var i=0;i<adj[cur].length;i++){
                 var nxt=adj[cur][i]
@@ -371,9 +384,9 @@ var algorithms={
         while(dfs_st.length){
             var cur=dfs_st.pop()
             for(var i=0;i<adj[cur].length;i++){
-                steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight??0} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight??0}`},{type:"edge",index:adj[cur][i][1],style:{colour:"#00a"}}])
+                steps.push([{type:"output",text:`${lts[adj[cur][i][0]]} - ${curGraph.edges[adj[cur][i][1]].weight??0} = ${lts[adj[cur][i][0]]-curGraph.edges[adj[cur][i][1]].weight??0}`},{type:"edge",index:adj[cur][i][1],style:styles.cpa.backward}])
             }
-            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{colour:"#ff0",label:getVertexLabel(cur)+" ("+ets[cur]+"|"+lts[cur]+")"}}])
+            steps.push([{type:"output",text:"Vertex "+getVertexLabel(cur)+" late time = "+lts[cur]},{type:"vertex",index:cur,style:{...styles.cpa.vertexBackward,label:getVertexLabel(cur)+" ("+ets[cur]+"|"+lts[cur]+")"}}])
             for(var i=0;i<radj[cur].length;i++){
                 var nxt=radj[cur][i]
                 outdegs[nxt[0]]--
@@ -388,13 +401,13 @@ var algorithms={
                 var lt=lts[curGraph.edges[i].v2]
                 var et=ets[curGraph.edges[i].v1]
                 var wei=curGraph.edges[i].weight
-                steps.push([{type:"output",text:"Edge "+getEdgeLabel(i)+` float ${lt} - ${et} - ${wei} = `+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:{colour:(lt-et-wei)==0?"red":"#00a"}}])
+                steps.push([{type:"output",text:"Edge "+getEdgeLabel(i)+` float ${lt} - ${et} - ${wei} = `+(lt-et-wei)+((lt-et-wei)==0?" (critical)":"")},{type:"edge",index:i,style:(lt-et-wei)==0?styles.cpa.critical:styles.cpa.edge}])
             }
         }
 
         return steps
     },
-    rip(vert){
+    rip(vert,vert2){
         var steps=[]
         var adj=curGraph.vertices.map(a=>[])
         var swei=0
@@ -415,8 +428,10 @@ var algorithms={
             return res
         }
         var odeg=[]
+        var crit=[]
         for(var i=0;i<curGraph.vertices.length;i++){
             if(adj[i].length%2)odeg.push(i)
+            if((adj[i].length%2)^(i==vert)^(i==vert2))crit.push(i)
         }
         var vcount=curGraph.edges.map(a=>1)
         var distmat=[]
@@ -443,11 +458,10 @@ var algorithms={
             distmat.push(dists)
             if(vi!=0&&dists[0][1]==-1)return [[{type:"output",text:"Graph is not connected"}]]
         }
-
-        if(odeg.length){
-            steps.push([{type:"output",text:"Odd degree vertices are "+odeg.map(a=>getVertexLabel(a)).join(", ")}])
-
-            var configs=gperms(odeg)
+        steps.push([{type:"output",text:"Odd degree vertices are "+odeg.map(a=>getVertexLabel(a)).join(", ")}])
+        steps.push([{type:"output",text:"Vertices to pair are "+crit.map(a=>getVertexLabel(a)).join(", ")}])
+        if(crit.length){
+            var configs=gperms(crit)
             var mcs=[null,Infinity]
             var lpaths=[]
             for(var i=0;i<configs.length;i++){
@@ -458,8 +472,8 @@ var algorithms={
                 for(var j=0;j<cconf.length;j++){
                     var cpair=cconf[j]
                     steps.push([{type:"output",text:getVertexLabel(cpair[0])+" - "+getVertexLabel(cpair[1])+" has distance "+distmat[cpair[0]][cpair[1]][0]},
-                            {type:"vertex",index:cpair[0],style:{colour:"red"}},
-                            {type:"vertex",index:cpair[1],style:{colour:"red"}}
+                            {type:"vertex",index:cpair[0],style:styles.rip.paired},
+                            {type:"vertex",index:cpair[1],style:styles.rip.paired}
                         ])
                     ccs+=distmat[cpair[0]][cpair[1]][0]
                 }
@@ -480,7 +494,7 @@ var algorithms={
             steps.push([{type:"output",text:"Total weight: "+(mcs[1]+swei)}])
 
         }else{
-            steps.push([{type:"output",text:"No odd degree vertices"}])
+            steps.push([{type:"output",text:"No vertices to pair"}])
         }
         function gtour(vert){
             var vlist=[]
@@ -515,7 +529,7 @@ var algorithms={
         var ctour=gtour(vert)
         steps.push([{type:"output",text:"Example path: "+[vert,...ctour[0]].map(a=>getVertexLabel(a)).join(", ")}])
         for(var i=0;i<ctour[1].length;i++){
-            steps.push([{type:"edge",index:ctour[1][i],style:{colour:vcount[ctour[1][i]]>=2?"#0000ff":vcount[ctour[1][i]]?"#00cc00":"#ff0000",width:2}}])
+            steps.push([{type:"edge",index:ctour[1][i],style:vcount[ctour[1][i]]>=2?styles.rip.repeat3:vcount[ctour[1][i]]?styles.rip.repeated:styles.rip.path}])
             vcount[ctour[1][i]]++
         }
         return steps

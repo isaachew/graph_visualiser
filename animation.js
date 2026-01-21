@@ -4,20 +4,26 @@ var animSteps=[]
 var lastTime=null
 var outputEnabled=true
 setInterval(()=>{
-    for(;progress<targ&&progress<animSteps.length;progress++){
-        for(var j of animSteps[progress]){
-            if(j.type=="vertex"){
-                curGraph.vertices[j.index].style=j.style
-            }else if(j.type=="edge"){
-                curGraph.edges[j.index].style=j.style
-            }else if(j.type=="output"){
-                if(outputEnabled){
-                    var dvEl=document.createElement("div")
-                    dvEl.append(j.text)
-                    document.getElementById("algOutput").append(dvEl)
+    try{
+        for(;progress<targ&&progress<animSteps.length;progress++){
+            for(var j of animSteps[progress]){
+                if(j.type=="vertex"){
+                    curGraph.vertices[j.index].style=j.style
+                }else if(j.type=="edge"){
+                    curGraph.edges[j.index].style=j.style
+                }else if(j.type=="output"){
+                    if(outputEnabled){
+                        var dvEl=document.createElement("div")
+                        dvEl.append(j.text)
+                        document.getElementById("algOutput").append(dvEl)
+                    }
                 }
             }
         }
+    }catch(e){
+        console.log("Error:",e)
+        lastTime=null
+        targ=0
     }
     document.getElementById("numSteps").textContent=Math.min(Math.ceil(targ),animSteps.length)+"/"+animSteps.length
     if(lastTime!=null){
