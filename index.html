@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="heap.js" defer></script>
+        <script src="heap.js"></script>
 
         <script src="algorithms.js" defer></script>
         <script src="animation.js" defer></script>
+        <script src="presets.js" defer></script>
         <script src="index.js" defer></script>
         <link rel="stylesheet" href="index.css"></link>
     </head>
@@ -90,6 +91,15 @@
             <div>Min: <input type="number" id="edgeWeightMin" value="1"> Max: <input type="number" id="edgeWeightMax" value="100"> Step: <input type="number" id="edgeWeightStep" value="1"><button id="randomiseWeights">Randomise edge weights</button></div>
             <div>
                 <button id="reverseEdges">Reverse all edges</button>
+            </div>
+            <div>
+                <select id="presetSelect">
+                    <option value="example">Dijkstra example graph</option>
+                    <option value="cpa_demo">Critical path analysis demo</option>
+                    <option value="grid10">10 x 10 grid</option>
+                    <option value="tree_large">Tree (large)</option>
+                </select>
+                <button id="loadPreset">Load preset</button>
             </div>
         </div>
         </div>

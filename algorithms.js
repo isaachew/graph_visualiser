@@ -143,7 +143,7 @@ var algorithms={
             }
             visited[cur[0]]=1
             st.push([-1,cur[1],cur[0]])
-            for(var i=0;i<adj[cur[0]].length;i++){
+            for(var i=adj[cur[0]].length;i-->0;){
                 var curEdge=curGraph.edges[adj[cur[0]][i]]
                 if(adj[cur[0]][i]==cur[1])continue
                 //steps.push([{type:"output",text:"Visiting edge "+getEdgeLabel(adj[cur[0]][i])}])
