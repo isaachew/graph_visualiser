@@ -63,7 +63,9 @@ var algParams={
     kruskal:[],
     nn:[{type:"vertex",name:"starting vertex"}],
     rip:[{type:"vertex",name:"starting vertex"},{type:"vertex",name:"ending vertex"}],
-    cpa:[]
+    cpa:[],
+    matching:[],
+    kosaraju:[]
 }
 var algorithms={
     dijkstra(vert,dest){
@@ -532,6 +534,145 @@ var algorithms={
             steps.push([{type:"edge",index:ctour[1][i],style:vcount[ctour[1][i]]>=2?styles.rip.repeat3:vcount[ctour[1][i]]?styles.rip.repeated:styles.rip.path}])
             vcount[ctour[1][i]]++
         }
+        return steps
+    },
+    matching(){
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            adj[curGraph.edges[i].v2].push(i)
+        }
+        var cols=curGraph.vertices.map(a=>null)
+        for(var i=0;i<curGraph.vertices.length;i++){
+            if(cols[i]!=null)continue
+            var dfs_st=[[i,0]]
+            while(dfs_st.length){
+                var cur=dfs_st.pop()
+                console.log(cur)
+                if(cols[cur[0]]!=null){
+                    if(cols[cur[0]]!=cur[1])return [[{type:"output",text:"Graph is not bipartite"}]]
+                    else continue
+                }
+                cols[cur[0]]=cur[1]
+                for(var j=0;j<adj[cur[0]].length;j++){
+                    dfs_st.push([curGraph.edges[adj[cur[0]][j]].v1^curGraph.edges[adj[cur[0]][j]].v2^cur[0],+!cols[cur[0]]])
+                }
+            }
+        }
+        var matched=curGraph.vertices.map(a=>null)//to edge
+        var toAdd=true
+        while(toAdd){
+            toAdd=false
+            for(var i=0;i<curGraph.vertices.length;i++){
+                if(matched[i]!=null)continue
+                var visited=curGraph.vertices.map(a=>null)//prev vert
+                var dfs_st=[[i,null,null,null]]//unmatched edge, matched edge
+                while(dfs_st.length&&!toAdd){
+                    var cur=dfs_st.pop()
+                    if(visited[cur[0]]!=null)continue
+                    visited[cur[0]]=cur
+                    console.log("cur",""+cur)
+                    for(var j=0;j<adj[cur[0]].length;j++){
+                        var ed=curGraph.edges[adj[cur[0]][j]]
+                        var vert=ed.v1^ed.v2^cur[0]
+                        if(matched[vert]!=null){
+                            var oth=curGraph.edges[matched[vert]].v1^curGraph.edges[matched[vert]].v2^vert
+                            dfs_st.push([oth,adj[cur[0]][j],matched[vert],cur[0]])
+                        }else{//path found
+                            var pth=[adj[cur[0]][j]]
+                            var vert=cur[0]
+                            while(vert!=i){
+                                pth.push(visited[vert][2],visited[vert][1])
+                                vert=visited[vert][3]
+                            }
+                            pth.reverse()
+                            var cstep=[]
+                            for(var i=0;i<pth.length;i++){
+                                cstep.push({type:"edge",index:pth[i],style:{colour:"red"}})
+                            }
+                            cstep.push({type:"output",text:"Augmenting path found"})
+                            steps.push(cstep)
+                            cstep=[]
+                            for(var i=0;i<pth.length;i+=2){
+                                matched[curGraph.edges[pth[i]].v1]=pth[i]
+                                matched[curGraph.edges[pth[i]].v2]=pth[i]
+                                cstep.push({type:"edge",index:pth[i],style:{colour:"blue"}})
+                                if(i)cstep.push({type:"edge",index:pth[i-1],style:{}})
+                            }
+                            steps.push(cstep)
+                            toAdd=true
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        console.log(matched)
+        return steps
+    },
+    kosaraju(){//SCC
+        var steps=[]
+        var adj=curGraph.vertices.map(a=>[])
+        var radj=curGraph.vertices.map(a=>[])
+        for(var i=0;i<curGraph.edges.length;i++){
+            adj[curGraph.edges[i].v1].push(i)
+            radj[curGraph.edges[i].v2].push(i)
+            if(!curGraph.edges[i].directed)adj[curGraph.edges[i].v2].push(i)
+            if(!curGraph.edges[i].directed)radj[curGraph.edges[i].v1].push(i)
+        }
+        steps.push([{type:"output",text:"Forward pass"}])
+        var dfso=[]
+        var visited=curGraph.vertices.map(a=>0)
+        var dfs_st=[]
+        for(var i=0;i<curGraph.vertices.length;i++){
+            if(!visited[i])steps.push([{type:"output",text:"Starting DFS from vertex "+getVertexLabel(i)}])
+            dfs_st.push([i,null])
+            while(dfs_st.length){
+                var cur=dfs_st.pop()
+                if(cur[0]<0){
+                    dfso.push(~cur[0])
+                    steps.push([{type:"output",text:"Leaving vertex "+getVertexLabel(~cur[0])},{type:"vertex",index:~cur[0],style:{colour:"blue"}}])
+                    if(cur[1]!=null)steps[steps.length-1].push({type:"edge",index:cur[1],style:{}})
+                    continue
+                }
+                if(visited[cur[0]])continue
+                if(cur[1]!=null)steps.push([{type:"edge",index:cur[1],style:{colour:"red"}}])
+                steps.push([{type:"vertex",index:cur[0],style:{colour:"red"}}])
+                dfs_st.push([~cur[0],cur[1]])//for postorder
+                visited[cur[0]]=1
+                for(var j=adj[cur[0]].length;j-->0;){
+                    var vert=curGraph.edges[adj[cur[0]][j]].v1^curGraph.edges[adj[cur[0]][j]].v2^cur[0]
+                    dfs_st.push([vert,adj[cur[0]][j]])
+                }
+            }
+        }
+        dfso.reverse()
+        steps.push([{type:"output",text:"Backward pass"}])
+        visited=curGraph.vertices.map(a=>null)//sccs
+        for(var i of dfso){
+            steps.push([{type:"output",text:"Visiting vertex "+getVertexLabel(i)}])
+
+            dfs_st.push([i,null])
+            while(dfs_st.length){
+                var cur=dfs_st.pop()
+                if(cur[0]<0){
+                    if(cur[1]!=null)steps.push([{type:"edge",index:cur[1],style:{}}])
+                    continue
+                }
+                if(visited[cur[0]]!=null)continue
+                if(cur[1]!=null)steps.push([{type:"edge",index:cur[1],style:{colour:"red"}}])
+                steps.push([{type:"output",text:getVertexLabel(cur[0])+" is in the SCC of "+getVertexLabel(i)}])
+                steps.push([{type:"vertex",index:cur[0],style:{colour:"#"+((43678518*i+5768936)&16777215).toString(16).padStart(6,0)}}])
+                visited[cur[0]]=i
+                dfs_st.push([~cur[0],cur[1]])
+                for(var j of radj[cur[0]]){
+                    var vert=curGraph.edges[j].v1^curGraph.edges[j].v2^cur[0]
+                    dfs_st.push([vert,j])
+                }
+            }
+        }
+        console.log(visited)
         return steps
     }
 }
