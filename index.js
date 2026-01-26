@@ -575,7 +575,7 @@ var selectedAlgorithm=null
 var curAlgParams=[]
 var curAlgParamTypes=[]
 function runAlgorithm(alg,params){
-    animSteps=algorithms[alg](...params)
+    animSteps=algorithms[alg].run(...params)
     startAnim()
     curTool="draw"
 }
@@ -584,7 +584,7 @@ function algEnterParam(){//requests parameter or runs algorithm
         runAlgorithm(selectedAlgorithm,curAlgParams)
     }else{
         var dvEl=document.createElement("div")
-        dvEl.append("Select "+algParams[selectedAlgorithm][curAlgParams.length].name)
+        dvEl.append("Select "+algorithms[selectedAlgorithm].parameters[curAlgParams.length].name)
         document.getElementById("algOutput").append(dvEl)
     }
 }
@@ -592,7 +592,7 @@ document.getElementById("runAlgorithm").addEventListener("click",e=>{
     selectedAlgorithm=document.getElementById("algorithms").value
     curTool="algorithm"
     curAlgParams=[]
-    curAlgParamTypes=algParams[selectedAlgorithm]
+    curAlgParamTypes=algorithms[selectedAlgorithm].parameters
     document.getElementById("algOutput").textContent=""
     algEnterParam()
 })
