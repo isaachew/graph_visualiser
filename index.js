@@ -57,9 +57,22 @@ function getStyle(...args){
 function renderGraph(){
     rc.clearRect(0,0,width*dpr,height*dpr)
     var adjList={}
+    var edgeDistances={}
+    var edgeDists=[]
     for(var i=0;i<curGraph.edges.length;i++){
         var curEdge=curGraph.edges[i]
-        adjList[curEdge.v1+" "+curEdge.v2]=1
+        adjList[curEdge.v1+" "+curEdge.v2]||=0
+        adjList[curEdge.v1+" "+curEdge.v2]++
+    }
+
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        edgeDistances[curEdge.v1+" "+curEdge.v2]||=0
+        edgeDistances[curEdge.v1+" "+curEdge.v2]++
+
+        if((adjList[curEdge.v1+" "+curEdge.v2]??0)+(adjList[curEdge.v2+" "+curEdge.v1]??0)>1)edgeDists.push(edgeDistances[curEdge.v1+" "+curEdge.v2])
+        else if(curEdge.v1==curEdge.v2)edgeDists.push(edgeDistances[curEdge.v1+" "+curEdge.v2])
+        else edgeDists.push(0)
     }
     for(var i=0;i<curGraph.edges.length;i++){
         var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
@@ -70,19 +83,24 @@ function renderGraph(){
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
         var ev2=curGraph.vertices[curGraph.edges[i].v2]
         //rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
-        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?settings.directedEdgeDist:0
-        if(curGraph.edges[i].directed&&directedDist){
-            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
-            if(settings.curvedEdges){
-                rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
-                rc.quadraticCurveTo(...getCanvCoords((ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2,dpr),...getCanvCoords(ev2.x,ev2.y,dpr))
-            }else{
-                rc.moveTo(...getCanvCoords(ev1.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev1.y-(ev2.x-ev1.x)/ev1ev2d*directedDist,dpr))
-                rc.lineTo(...getCanvCoords(ev2.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev2.y-(ev2.x-ev1.x)/ev1ev2d*directedDist,dpr))
-            }
+        if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+            var loopRad=edgeDists[i]*0.05
+            rc.arc(...getCanvCoords(ev1.x,ev1.y-loopRad,dpr),loopRad*width/scale*dpr,Math.PI/2,2.5*Math.PI)
         }else{
-            rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
-            rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+            var edgeOffset=settings.directedEdgeDist*(edgeDists[i]?edgeDists[i]*2-1:0)
+            if(edgeOffset!=0){
+                var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+                if(settings.curvedEdges){
+                    rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
+                    rc.quadraticCurveTo(...getCanvCoords((ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*edgeOffset*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*edgeOffset*2,dpr),...getCanvCoords(ev2.x,ev2.y,dpr))
+                }else{
+                    rc.moveTo(...getCanvCoords(ev1.x+(ev2.y-ev1.y)/ev1ev2d*edgeOffset,ev1.y-(ev2.x-ev1.x)/ev1ev2d*edgeOffset,dpr))
+                    rc.lineTo(...getCanvCoords(ev2.x+(ev2.y-ev1.y)/ev1ev2d*edgeOffset,ev2.y-(ev2.x-ev1.x)/ev1ev2d*edgeOffset,dpr))
+                }
+            }else{
+                rc.moveTo(...getCanvCoords(ev1.x,ev1.y,dpr))
+                rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
+            }
         }
         rc.stroke()
 
@@ -90,12 +108,19 @@ function renderGraph(){
         if(curGraph.edges[i].directed){//draw arrow
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
             var ev1ev2rat=0.5
-            var arrSizeX=0.03
-            var arrSizeY=0.01
+            var arrSizeX=scale*0.02
+            var arrSizeY=scale*0.007
             rc.beginPath()
-            rc.moveTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d,dpr))
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d,dpr))//back and down
-            rc.lineTo(...getCanvCoords(ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(arrSizeX/2)-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(arrSizeX/2)+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d,dpr))//back and down
+            var edgeDir=[(ev2.x-ev1.x)/ev1ev2d,(ev2.y-ev1.y)/ev1ev2d]
+            var arrPos=[ev1.x+(ev2.x-ev1.x)/2,ev1.y+(ev2.y-ev1.y)/2]
+            if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+                edgeDir=[1,0]
+                arrPos=[ev1.x,ev1.y-edgeDists[i]*0.1]
+                edgeOffset=0
+            }
+            rc.moveTo(...getCanvCoords(arrPos[0]+(edgeDir[0]*(-arrSizeX/2)-edgeDir[1]*(arrSizeY-edgeOffset)),arrPos[1]+(edgeDir[1]*(-arrSizeX/2)+edgeDir[0]*(arrSizeY-edgeOffset)),dpr))//back right
+            rc.lineTo(...getCanvCoords(arrPos[0]+(edgeDir[0]*(-arrSizeX/2)-edgeDir[1]*(-arrSizeY-edgeOffset)),arrPos[1]+(edgeDir[1]*(-arrSizeX/2)+edgeDir[0]*(-arrSizeY-edgeOffset)),dpr))//back left
+            rc.lineTo(...getCanvCoords(arrPos[0]+(edgeDir[0]*(arrSizeX/2)-edgeDir[1]*(-edgeOffset)),arrPos[1]+(edgeDir[1]*(arrSizeX/2)+edgeDir[0]*(-edgeOffset)),dpr))//forward
             rc.closePath()
             rc.fill()
         }
@@ -104,11 +129,14 @@ function renderGraph(){
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
             rc.textAlign="center"
             rc.textBaseline="middle"
-            var cdx=(ev2.y-ev1.y)
-            var cdy=-(ev2.x-ev1.x)
-            var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            var edgeDir=[(ev2.x-ev1.x)/ev1ev2d,(ev2.y-ev1.y)/ev1ev2d]
+            if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+                edgeDir=[1,0]
+                edgeOffset=edgeDists[i]*0.1
+            }
             var label=curStyle.label??curGraph.edges[i].weight
-            if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+cdx/dist*(curStyle.labelDistance/width*scale+directedDist),(ev1.y+ev2.y)/2+cdy/dist*(curStyle.labelDistance/width*scale+directedDist),dpr))
+            if(label!=null)rc.fillText(label,...getCanvCoords((ev1.x+ev2.x)/2+edgeDir[1]*(curStyle.labelDistance/width*scale+edgeOffset),(ev1.y+ev2.y)/2-edgeDir[0]*(curStyle.labelDistance/width*scale+edgeOffset),dpr))
         }
     }
     for(var i=0;i<curGraph.vertices.length;i++){
@@ -206,62 +234,96 @@ function renderGraphSVG(){
     stel.append("text{dominant-baseline:middle;text-anchor:middle;font-family:Arial}")
     svel.appendChild(stel)
     var adjList={}
+    var edgeDistances={}
+    var edgeDists=[]
     for(var i=0;i<curGraph.edges.length;i++){
         var curEdge=curGraph.edges[i]
-        adjList[curEdge.v1+" "+curEdge.v2]=1
+        adjList[curEdge.v1+" "+curEdge.v2]||=0
+        adjList[curEdge.v1+" "+curEdge.v2]++
+    }
+
+    for(var i=0;i<curGraph.edges.length;i++){
+        var curEdge=curGraph.edges[i]
+        edgeDistances[curEdge.v1+" "+curEdge.v2]||=0
+        edgeDistances[curEdge.v1+" "+curEdge.v2]++
+
+        if((adjList[curEdge.v1+" "+curEdge.v2]??0)+(adjList[curEdge.v2+" "+curEdge.v1]??0)>1)edgeDists.push(edgeDistances[curEdge.v1+" "+curEdge.v2])
+        else if(curEdge.v1==curEdge.v2)edgeDists.push(edgeDistances[curEdge.v1+" "+curEdge.v2])
+        else edgeDists.push(0)
     }
     for(var i=0;i<curGraph.edges.length;i++){
         var curStyle=getStyle(settings.edge,curGraph.edges[i],curGraph.edges[i].style)
-        var pel=document.createElementNS("http://www.w3.org/2000/svg","path")
-        pel.style.strokeWidth=curStyle.width/width*scale
-        pel.style.stroke=curStyle.colour
 
-        var peld=""
         var ev1=curGraph.vertices[curGraph.edges[i].v1]
         var ev2=curGraph.vertices[curGraph.edges[i].v2]
         //rc.lineTo(...getCanvCoords(ev2.x,ev2.y,dpr))
-        var directedDist=adjList[curGraph.edges[i].v2+" "+curGraph.edges[i].v1]?settings.directedEdgeDist:0
-        if(curGraph.edges[i].directed&&directedDist){
-            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
-            if(settings.curvedEdges){
-                peld+="M"+[ev1.x,ev1.y]
-                peld+="Q"+[(ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*directedDist*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*directedDist*2]+","+[ev2.x,ev2.y]
-            }else{
-                peld+="M"+[ev1.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev1.y-(ev2.x-ev1.x)/ev1ev2d*directedDist]
-                peld+="L"+[ev2.x+(ev2.y-ev1.y)/ev1ev2d*directedDist,ev2.y-(ev2.x-ev1.x)/ev1ev2d*directedDist]
-            }
+        if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+            var pel=document.createElementNS("http://www.w3.org/2000/svg","circle")
+            pel.style.strokeWidth=curStyle.width/width*scale
+            pel.style.stroke=curStyle.colour
+            pel.style.cx=ev1.x
+            pel.style.cy=ev1.y-0.05
+            pel.style.r=0.05
+            pel.setAttribute("fill","none")
+            svel.append(pel)
         }else{
-            peld+="M"+[ev1.x,ev1.y]
-            peld+="L"+[ev2.x,ev2.y]
+            var pel=document.createElementNS("http://www.w3.org/2000/svg","path")
+            pel.style.strokeWidth=curStyle.width/width*scale
+            pel.style.stroke=curStyle.colour
+            var peld=""
+            var edgeOffset=settings.directedEdgeDist*edgeDists[i]
+            if(edgeOffset!=0){
+                var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+                if(settings.curvedEdges){
+                    peld+="M"+[ev1.x,ev1.y]
+                    peld+="Q"+[(ev1.x+ev2.x)/2+(ev2.y-ev1.y)/ev1ev2d*edgeOffset*2,(ev1.y+ev2.y)/2-(ev2.x-ev1.x)/ev1ev2d*edgeOffset*2]+","+[ev2.x,ev2.y]
+                }else{
+                    peld+="M"+[ev1.x+(ev2.y-ev1.y)/ev1ev2d*edgeOffset,ev1.y-(ev2.x-ev1.x)/ev1ev2d*edgeOffset]
+                    peld+="L"+[ev2.x+(ev2.y-ev1.y)/ev1ev2d*edgeOffset,ev2.y-(ev2.x-ev1.x)/ev1ev2d*edgeOffset]
+                }
+            }else{
+                peld+="M"+[ev1.x,ev1.y]
+                peld+="L"+[ev2.x,ev2.y]
+            }
+            pel.setAttribute("d",peld)
+            pel.setAttribute("fill","none")
+            svel.append(pel)
         }
-        pel.setAttribute("d",peld)
-        pel.setAttribute("fill","none")
-        svel.append(pel)
         if(curGraph.edges[i].directed){//draw arrow
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
             var ev1ev2rat=0.5
-            var arrSizeX=0.03
-            var arrSizeY=0.01
+            var arrSizeX=scale*0.02
+            var arrSizeY=scale*0.007
             var pel=document.createElementNS("http://www.w3.org/2000/svg","path")
             var peld=""
-            peld+="M"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(arrSizeY-directedDist))/ev1ev2d]
-            peld+="L"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(-arrSizeX/2)-(ev2.y-ev1.y)*(-arrSizeY-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(-arrSizeX/2)+(ev2.x-ev1.x)*(-arrSizeY-directedDist))/ev1ev2d]//back and down
-            peld+="L"+[ev1.x+(ev2.x-ev1.x)*ev1ev2rat+((ev2.x-ev1.x)*(arrSizeX)/2-(ev2.y-ev1.y)*(-directedDist))/ev1ev2d,ev1.y+(ev2.y-ev1.y)*ev1ev2rat+((ev2.y-ev1.y)*(arrSizeX/2)+(ev2.x-ev1.x)*(-directedDist))/ev1ev2d]//back and down
+            var edgeDir=[(ev2.x-ev1.x)/ev1ev2d,(ev2.y-ev1.y)/ev1ev2d]
+            var arrPos=[ev1.x+(ev2.x-ev1.x)/2,ev1.y+(ev2.y-ev1.y)/2]
+            if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+                edgeDir=[1,0]
+                arrPos=[ev1.x,ev1.y-edgeDists[i]*0.1]
+                edgeOffset=0
+            }
+            peld+="M"+[arrPos[0]+(edgeDir[0]*(-arrSizeX/2)-edgeDir[1]*(arrSizeY-edgeOffset)),arrPos[1]+(edgeDir[1]*(-arrSizeX/2)+edgeDir[0]*(arrSizeY-edgeOffset))]//back right
+            peld+="L"+[arrPos[0]+(edgeDir[0]*(-arrSizeX/2)-edgeDir[1]*(-arrSizeY-edgeOffset)),arrPos[1]+(edgeDir[1]*(-arrSizeX/2)+edgeDir[0]*(-arrSizeY-edgeOffset))]//back left
+            peld+="L"+[arrPos[0]+(edgeDir[0]*(arrSizeX/2)-edgeDir[1]*(-edgeOffset)),arrPos[1]+(edgeDir[1]*(arrSizeX/2)+edgeDir[0]*(-edgeOffset))]//forward
             peld+="Z"
             pel.setAttribute("d",peld)
             svel.append(pel)
         }
         if(curStyle.labelSize){
             rc.fillStyle=curStyle.labelColour
-            var cdx=(ev2.y-ev1.y)
-            var cdy=-(ev2.x-ev1.x)
-            var dist=Math.hypot(ev2.x-ev1.x,ev2.y-ev1.y)
+            var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
+            var edgeDir=[(ev2.x-ev1.x)/ev1ev2d,(ev2.y-ev1.y)/ev1ev2d]
+            if(curGraph.edges[i].v1==curGraph.edges[i].v2){
+                edgeDir=[1,0]
+                edgeOffset=edgeDists[i]*0.1
+            }
             var label=curStyle.label??curGraph.edges[i].weight
 
             if(label!=null){
                 var pel=document.createElementNS("http://www.w3.org/2000/svg","text")
-                pel.setAttribute("x",(ev1.x+ev2.x)/2+cdx/dist*(curStyle.labelDistance/width*scale+directedDist))
-                pel.setAttribute("y",(ev1.y+ev2.y)/2+cdy/dist*(curStyle.labelDistance/width*scale+directedDist))
+                pel.setAttribute("x",(ev1.x+ev2.x)/2+edgeDir[1]*(curStyle.labelDistance/width*scale+edgeOffset))
+                pel.setAttribute("y",(ev1.y+ev2.y)/2-edgeDir[0]*(curStyle.labelDistance/width*scale+edgeOffset))
                 pel.setAttribute("font-size",curStyle.labelSize/width*scale)
                 pel.setAttribute("fill",curStyle.labelColour)
 
