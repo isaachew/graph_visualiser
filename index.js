@@ -480,7 +480,7 @@ document.addEventListener("mouseup",e=>{
                     algEnterParam()
                 }
             }else{
-                if(selectedVertex!=clickTarget){
+                if(selectedVertex!=clickTarget||e.shiftKey||e.metaKey){
                     var canAdd=true
                     var revEdge=false//directed edge in opposite direction
                     for(var i=0;i<curGraph.edges.length;i++){
@@ -494,6 +494,7 @@ document.addEventListener("mouseup",e=>{
                             revEdge=true
                         }
                     }
+                    canAdd||=e.shiftKey
                     if(canAdd&&curTool=="draw"){
                         curGraph.edges.push({v1:selectedVertex,v2:clickTarget,directed:revEdge})
                         selectedEdge=curGraph.edges.length-1
@@ -523,6 +524,14 @@ document.addEventListener("mouseup",e=>{
     dragIndex=null
     clickTarget=null
     lastMousePos=null
+    updateUI()
+    //vertices might have changed
+    if(changedGraph){
+        pushUndo()
+        renderReps()
+    }
+})
+function updateUI(){
     if(selectedEdge!=null){
         document.getElementById("edgeSettings").style.display="block"
         document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
@@ -548,12 +557,19 @@ document.addEventListener("mouseup",e=>{
     }else{
         document.getElementById("vertexSettings").style.display="none"
     }
-    //vertices might have changed
-    if(changedGraph){
-        pushUndo()
-        renderReps()
+}
+function cycleEdges(){
+    var curEdgeAdj=curGraph.edges[selectedEdge].v1+" "+curGraph.edges[selectedEdge].v2
+    for(var i=1;i<=curGraph.edges.length;i++){
+        var curInd=(selectedEdge+i)%curGraph.edges.length
+        if(curGraph.edges[curInd].v1+" "+curGraph.edges[curInd].v2==curEdgeAdj||curGraph.edges[curInd].v2+" "+curGraph.edges[curInd].v1==curEdgeAdj){
+            selectedEdge=curInd
+            updateGraph()
+            updateUI()
+            return
+        }
     }
-})
+}
 
 document.getElementById("drawModeButton").addEventListener("click",e=>{
     document.getElementById("deleteModeButton").classList.remove("selected")
@@ -628,6 +644,14 @@ document.getElementById("drawCanvas").addEventListener("keydown",e=>{
         selectedVertex=null
         selectedEdge=null
         e.preventDefault()
+    }else if(e.code=="KeyD"){
+        curGraph.edges[selectedEdge].directed=!curGraph.edges[selectedEdge].directed
+        renderReps()
+        pushUndo()
+        updateGraph()
+        return 999999999999999999-1e18
+    }else if(e.code=="KeyC"){
+        cycleEdges()
     }
 })
 document.getElementById("deleteButton").addEventListener("click",e=>{
@@ -763,6 +787,7 @@ document.getElementById("edgeLabel").addEventListener("input",e=>{
 })
 document.getElementById("edgeDirected").addEventListener("input",e=>{
     if(selectedEdge!=null){
+        /*
         var editedEdge=curGraph.edges[selectedEdge]
         for(var i=0;i<curGraph.edges.length;i++){//do not allow if there is a reverse edge
             var curEdge=curGraph.edges[i]
@@ -771,6 +796,7 @@ document.getElementById("edgeDirected").addEventListener("input",e=>{
                 return
             }
         }
+        */
         curGraph.edges[selectedEdge].directed=e.target.checked
         if(curGraph.edges[selectedEdge].directed==false)delete curGraph.edges[selectedEdge].directed
         updateGraph()
