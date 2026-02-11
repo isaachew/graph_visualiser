@@ -58,7 +58,7 @@ body{
     text-align:center;
     align-content:center;
     padding:8px;
-    background:#ddd;
+    background:#eee;
 }
 table{
     border-collapse:collapse
@@ -100,7 +100,7 @@ table{
 
 button{
     border:1px solid #888;
-    background:#ccc;
+    background:#ddd;
     padding:4px 6px;
     margin:5px 2px;
     font-size:12px;
@@ -118,6 +118,8 @@ input[type=number]{
     flex:1;
     padding:0 10px;
     align-content:center;
+    background:#eee;
+    border-right:1px solid #aaa
 }
 #toolbar button.selected{
     outline:2px solid black

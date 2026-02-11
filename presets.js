@@ -19,6 +19,8 @@ for(var i=0;i<wid;i++){
 function loadPreset(){
     var presetID=document.getElementById("presetSelect").value
     curGraph=JSON.parse(JSON.stringify(presets[presetID]))
+    selectedVertex=null
+    selectedEdge=null
     updateGraph()
     pushUndo()
 }

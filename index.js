@@ -8,6 +8,7 @@ var settings={
     vertex:{
         size:20,
         labelSize:15,
+        labelColour:"#000000",
         outlineCol:"#000000",
         outlineWidth:2,
         colour:"#aaaaaa"
@@ -106,6 +107,7 @@ function renderGraph(){
 
         rc.setLineDash([])
         if(curGraph.edges[i].directed){//draw arrow
+            rc.fillStyle=curStyle.colour
             var ev1ev2d=Math.hypot(ev1.x-ev2.x,ev1.y-ev2.y)
             var ev1ev2rat=0.5
             var arrSizeX=scale*0.02
@@ -152,7 +154,7 @@ function renderGraph(){
             rc.stroke()
         }
         if(curStyle.labelSize){
-            rc.fillStyle="#000"
+            rc.fillStyle=curStyle.labelColour??"#000000"
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
             rc.textAlign="center"
             rc.textBaseline="middle"
@@ -354,6 +356,7 @@ function renderGraphSVG(){
             pel.setAttribute("x",cvert.x)
             pel.setAttribute("y",cvert.y)
             pel.setAttribute("font-size",curStyle.labelSize/width*scale)
+            pel.style.color=curStyle.labelColour
             svel.appendChild(pel)
             /*rc.fillStyle="#000"
             rc.font=curStyle.labelSize*dpr+"px sans-serif"
@@ -494,8 +497,7 @@ document.addEventListener("mouseup",e=>{
                             revEdge=true
                         }
                     }
-                    canAdd||=e.shiftKey
-                    if(canAdd&&curTool=="draw"){
+                    if(canAdd&&curTool=="draw"||e.shiftKey){
                         curGraph.edges.push({v1:selectedVertex,v2:clickTarget,directed:revEdge})
                         selectedEdge=curGraph.edges.length-1
                         changedGraph=true
@@ -510,7 +512,7 @@ document.addEventListener("mouseup",e=>{
         }else{
             selectedVertex=null
             selectedEdge=null
-            if(curTool=="draw"){
+            if(curTool=="draw"||e.shiftKey){
                 curGraph.vertices.push({x:mousePos[0],y:mousePos[1]})
                 changedGraph=true
             }
@@ -535,8 +537,10 @@ function updateUI(){
     if(selectedEdge!=null){
         document.getElementById("edgeSettings").style.display="block"
         document.getElementById("edgeWeight").value=curGraph.edges[selectedEdge].weight??""
-        document.getElementById("edgeColour").value=curGraph.edges[selectedEdge].colour??settings.edge.colour
+        document.getElementById("edgeCol").value=curGraph.edges[selectedEdge].colour??settings.edge.colour
         document.getElementById("edgeColDefault").checked=curGraph.edges[selectedEdge].colour==null
+        document.getElementById("edgeLabelCol").value=curGraph.edges[selectedEdge].labelColour??settings.edge.labelColour
+        document.getElementById("edgeLabelColDefault").checked=curGraph.edges[selectedEdge].labelColour==null
         document.getElementById("edgeLabel").value=curGraph.edges[selectedEdge].label??""
         document.getElementById("edgeWidth").value=curGraph.edges[selectedEdge].width??""
         document.getElementById("edgeDash").value=(curGraph.edges[selectedEdge].dash?.join(",")??"default")||"0"
@@ -548,7 +552,9 @@ function updateUI(){
     if(selectedVertex!=null){
         document.getElementById("vertexSettings").style.display="block"
         document.getElementById("vertexLabel").value=curGraph.vertices[selectedVertex].label??""
-        document.getElementById("vertexColour").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
+        document.getElementById("vertexLabelCol").value=curGraph.vertices[selectedVertex].labelColour??settings.vertex.labelColour
+        document.getElementById("vertexLabelColDefault").checked=curGraph.vertices[selectedVertex].labelColour==null
+        document.getElementById("vertexCol").value=curGraph.vertices[selectedVertex].colour??settings.vertex.colour
         document.getElementById("vertexColDefault").checked=curGraph.vertices[selectedVertex].colour==null
         document.getElementById("vertexOutlineWidth").value=curGraph.vertices[selectedVertex].outlineWidth??""
         document.getElementById("vertexOutlineCol").value=curGraph.vertices[selectedVertex].outlineCol??settings.vertex.outlineCol
@@ -584,8 +590,17 @@ document.getElementById("deleteModeButton").addEventListener("click",e=>{
 
 function deleteSelection(){
     if(selectedEdge!=null){
+        var curEdgeAdj=curGraph.edges[selectedEdge].v1+" "+curGraph.edges[selectedEdge].v2
         curGraph.edges.splice(selectedEdge,1)
         selectedEdge=null
+        for(var i=0;i<curGraph.edges.length;i++){
+            if(curGraph.edges[i].v1+" "+curGraph.edges[i].v2==curEdgeAdj||curGraph.edges[i].v2+" "+curGraph.edges[i].v1==curEdgeAdj){
+                selectedEdge=i
+                updateGraph()
+                updateUI()
+                break
+            }
+        }
     }
     else if(selectedVertex!=null){
         curGraph.vertices.splice(selectedVertex,1)
@@ -692,24 +707,7 @@ document.getElementById("edgeWeight").addEventListener("input",e=>{
     }
     pushUndo()
     renderReps()
-})
-document.getElementById("vertexColour").addEventListener("input",e=>{
-    if(selectedVertex!=null){
-        curGraph.vertices[selectedVertex].colour=e.target.value
-        document.getElementById("vertexColDefault").checked=false
-    }
-})
-
-document.getElementById("vertexColDefault").addEventListener("input",e=>{
-    if(selectedVertex!=null){
-        if(e.target.checked==false){
-            curGraph.vertices[selectedVertex].colour=settings.vertex.colour
-            document.getElementById("vertexColour").value=settings.vertex.colour
-        }else{
-            delete curGraph.vertices[selectedVertex].colour
-            document.getElementById("vertexColour").value=settings.vertex.colour
-        }
-    }
+    updateGraph()
 })
 
 document.getElementById("vertexLabel").addEventListener("input",e=>{
@@ -726,44 +724,34 @@ document.getElementById("vertexOutlineWidth").addEventListener("input",e=>{
         updateGraph()
     }
 })
-document.getElementById("vertexOutlineCol").addEventListener("input",e=>{
-    if(selectedVertex!=null){
-        curGraph.vertices[selectedVertex].outlineCol=e.target.value||null
-        if(curGraph.vertices[selectedVertex].outlineCol==null)delete curGraph.vertices[selectedVertex].outlineCol
-        updateGraph()
-    }
-})
-document.getElementById("vertexOutlineColDefault").addEventListener("input",e=>{
-    if(selectedVertex!=null){
-        if(e.target.checked==false){
-            curGraph.vertices[selectedVertex].outlineCol=settings.vertex.outlineCol
-            document.getElementById("vertexOutlineCol").value=settings.vertex.outlineCol
-        }else{
-            delete curGraph.vertices[selectedVertex].outlineCol
-            document.getElementById("vertexOutlineCol").value=settings.vertex.outlineCol
+document.getElementById("settingsMenu").addEventListener("input",e=>{
+    var colAttrs={vertexCol:"colour",vertexOutlineCol:"outlineColour",vertexLabelCol:"labelColour",edgeCol:"colour",edgeLabelCol:"labelColour"}
+    var cid=e.target.id
+    if(cid.slice(0,6)=="vertex"||cid.slice(0,4)=="edge"){
+        var curTarg=cid.slice(0,6)=="vertex"?curGraph.vertices[selectedVertex]:curGraph.edges[selectedEdge]
+        var curDef=cid.slice(0,6)=="vertex"?settings.vertex:settings.edge
+        if(cid.slice(-10)=="ColDefault"){
+            var att=cid.slice(0,-7)
+            var attrName=colAttrs[att]
+            if(e.target.checked==false){
+                curTarg[attrName]=curDef[attrName]
+                document.getElementById(att).value=curDef[attrName]
+            }else{
+                delete curTarg[attrName]
+                document.getElementById(att).value=curDef[attrName]
+            }
+            updateGraph()
+        }else if(cid.slice(-3)=="Col"){
+            var attrName=colAttrs[cid]
+            curTarg[attrName]=e.target.value
+            document.getElementById(cid+"Default").checked=false
+            updateGraph()
         }
-        updateGraph()
     }
 })
-document.getElementById("edgeColour").addEventListener("input",e=>{
-    if(selectedEdge!=null){
-        curGraph.edges[selectedEdge].colour=e.target.value
-        document.getElementById("edgeColDefault").checked=false
-        updateGraph()
-    }
-})
-document.getElementById("edgeColDefault").addEventListener("input",e=>{
-    if(selectedEdge!=null){
-        if(e.target.checked==false){
-            curGraph.edges[selectedEdge].colour=settings.edge.colour
-            document.getElementById("edgeColour").value=settings.edge.colour
-        }else{
-            delete curGraph.edges[selectedEdge].colour
-            document.getElementById("edgeColour").value=settings.edge.colour
-        }
-        updateGraph()
-    }
-})
+function addColourInput(){
+
+}
 document.getElementById("edgeDash").addEventListener("input",e=>{
     if(selectedEdge!=null){
         if(e.target.value!="default")curGraph.edges[selectedEdge].dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
@@ -787,22 +775,12 @@ document.getElementById("edgeLabel").addEventListener("input",e=>{
 })
 document.getElementById("edgeDirected").addEventListener("input",e=>{
     if(selectedEdge!=null){
-        /*
-        var editedEdge=curGraph.edges[selectedEdge]
-        for(var i=0;i<curGraph.edges.length;i++){//do not allow if there is a reverse edge
-            var curEdge=curGraph.edges[i]
-            if(curEdge.v2==editedEdge.v1&&curEdge.v1==editedEdge.v2){
-                e.target.checked=true
-                return
-            }
-        }
-        */
         curGraph.edges[selectedEdge].directed=e.target.checked
         if(curGraph.edges[selectedEdge].directed==false)delete curGraph.edges[selectedEdge].directed
         updateGraph()
     }
 })
-document.getElementById("defaultEdgeColour").addEventListener("input",e=>{
+document.getElementById("defaultEdgeCol").addEventListener("input",e=>{
     settings.edge.colour=e.target.value
     updateGraph()
 })
@@ -814,8 +792,12 @@ document.getElementById("defaultEdgeDash").addEventListener("input",e=>{
     settings.edge.dash=e.target.value=="0"?[]:e.target.value.split(",").map(a=>+a)
     updateGraph()
 })
-document.getElementById("defaultVertexColour").addEventListener("input",e=>{
+document.getElementById("defaultVertexCol").addEventListener("input",e=>{
     settings.vertex.colour=e.target.value
+    updateGraph()
+})
+document.getElementById("defaultVertexLabelCol").addEventListener("input",e=>{
+    settings.vertex.labelColour=e.target.value
     updateGraph()
 })
 document.getElementById("defaultVertexOutlineCol").addEventListener("input",e=>{
