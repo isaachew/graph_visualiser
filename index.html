@@ -20,7 +20,7 @@
                 <button onclick="scale*=2**.5;updateGraph()">Zoom out</button>
             </div>
         <canvas id="drawCanvas" tabindex="0"></canvas></div>
-        <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div><div>Graph</div></div>
+        <div id="tabs"><div id="tabMenu"><div>Settings</div><div>Visualisations</div><div>Graph</div><div>Instructions</div></div>
         <div id="settingsMenu" style="display:block">
             <div id="edgeSettings" class="settings">
             <div><span>Edge colour: </span><input id="edgeCol" type="color"></input><input type="checkbox" id="edgeColDefault"><span>Default</span></div>
@@ -85,7 +85,7 @@
         <div id="adjMatrixExpander"><div>Adjacency matrix (click to view):</div> <table id="adjMatrix"></table></div>
         <div id="adjListExpander"><div>Adjacency list (click to view):</div> <table id="adjList"></table></div></div>
         </div>
-        <div>
+        <div id="graphMenu">
             <div>
                 Graph as JSON:<textarea id="graphCode"></textarea>
                 <button onclick="document.getElementById('graphCode').value=getCode()">Export</button>
@@ -107,13 +107,23 @@
                 </select>
                 <button id="loadPreset">Load preset</button>
             </div>
+
+            Select generator: <select id="graphGenType">
+                <option value="grid">Grid</option>
+                <option value="complete">Complete graph</option>
+            </select>
+            <button onclick="curTool='generate'">Generate</button>
+            <div id="graphGenParams">
+            <div>Width: <input type="number"></input></div>
+            <div>Height: <input type="number"></input></div>
+        </div id="graphGenParams">
+        </div><div>
+            <ul><li>Shift-click or use the "Draw" tool to add vertices and edges.</li>
+                <li>Press Backspace or use the "Delete" tool to remove vertices.</li>
+                <li>Press C to cycle between edges in multigraphs.</li>
+                <li>Press D to toggle between directed/undirected edges.</li>
+            </ul></div>
         </div>
         </div>
-        </div>
-        <p>
-            Left-click to create vertices.
-            Left-click on two vertices to create an edge between them.
-            Vertices are draggable.
-        </p>
     </body>
 </html>

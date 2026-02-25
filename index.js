@@ -161,7 +161,9 @@ function renderGraph(){
             rc.fillText(curStyle.label??i,...getCanvCoords(cvert.x,cvert.y,dpr))
         }
     }
+
 }
+
 function renderReps(){
     renderAdjList()
     renderMatrix()
@@ -456,9 +458,101 @@ document.addEventListener("mousemove",e=>{
     }
     if(dragging)updateGraph()
 })
+var graphGeneration={
+    complete:{
+        parameters:[{name:"Nodes"}],
+        run(num){
+            var genGraph={vertices:[],edges:[]}
+            for(var i=0;i<num;i++){
+                genGraph.vertices.push({x:Math.cos(i*Math.PI*2/num),y:Math.sin(i*Math.PI*2/num)})
+                for(var j=0;j<i;j++)genGraph.edges.push({v1:j,v2:i})
+            }
+            return genGraph
+        }
+    },
+    grid:{
+        parameters:[{name:"Width"},{name:"Height"}],
+        run(wid,hei){
+            var genGraph={vertices:[],edges:[]}
+            for(var i=0;i<wid;i++){
+                for(var j=0;j<hei;j++){
+                    genGraph.vertices.push({x:i,y:j})
+                    if(i)genGraph.edges.push({v1:(i-1)*hei+j,v2:i*hei+j})
+                    if(j)genGraph.edges.push({v1:i*hei+(j-1),v2:i*hei+j})
+                }
+            }
+            return genGraph
+        }
+    },
+    tree:{
+        parameters:[{name:"Nodes"}],
+        run(num){
+            var genGraph={vertices:[],edges:[]}
+            for(var i=0;i<wid;i++){
+                for(var j=0;j<hei;j++){
+                    genGraph.vertices.push({x:i,y:j})
+                    if(i)genGraph.edges.push({v1:(i-1)*hei+j,v2:i*hei+j})
+                    if(j)genGraph.edges.push({v1:i*hei+(j-1),v2:i*hei+j})
+                }
+            }
+            return genGraph
+        }
+    }
+}
+function generateGraph(){
+    var genType=document.getElementById("graphGenType").value
+    var curGen=graphGeneration[genType]
+    var params=[]
+    for(var i=0;i<curGen.parameters.length;i++){
+        params.push(+document.getElementById("graphGenParams").children[i].querySelector("input").value)
+    }
+    console.log(params)
+    var genGraph=graphGeneration[genType].run(...params)
+    return genGraph
+}
+document.getElementById("graphGenType").addEventListener("input",e=>{
+    document.getElementById("graphGenParams").textContent=""
+    var curGen=graphGeneration[e.target.value]
+    for(var i=0;i<curGen.parameters.length;i++){
+        var entryEl=document.createElement("div")
+        var labelEl=document.createElement("span")
+
+        var inpEl=document.createElement("input")
+        inpEl.type="number"
+        labelEl.append(curGen.parameters[i].name)
+        entryEl.append(labelEl)
+        entryEl.append(inpEl)
+        document.getElementById("graphGenParams").append(entryEl)
+    }
+})
 document.addEventListener("mouseup",e=>{
     var changedGraph=false
     if(!dragging&&lastMousePos!=null){
+        if(curTool=="generate"){
+            //curTool="draw"
+            var vertexNum=curGraph.vertices.length
+            var addedGraph=generateGraph()
+
+            curGraph.vertices.push(...addedGraph.vertices.map(a=>{
+                x=Object.assign({},a)
+                x.x+=mousePos[0]-addedGraph.vertices[0].x
+                x.y+=mousePos[1]-addedGraph.vertices[0].y
+                return x
+            }))
+            curGraph.edges.push(...addedGraph.edges.map(a=>{
+                x=Object.assign({},a)
+                x.v1+=vertexNum
+                x.v2+=vertexNum
+                return x
+            }))
+            /*
+            for(var i=0;i<curGraph.vertices.length/2;i++){
+                curGraph.edges.push({v1:i,v2:i+curGraph.vertices.length/2})
+            }
+            */
+            pushUndo()
+            updateGraph()
+        }else
         if(clickTarget!=null){
             if(selectedVertex==null){
                 selectedVertex=clickTarget
@@ -658,6 +752,8 @@ document.getElementById("drawCanvas").addEventListener("keydown",e=>{
         renderReps()
         selectedVertex=null
         selectedEdge=null
+        dragIndex=null
+        dragging=false
         e.preventDefault()
     }else if(e.code=="KeyD"){
         curGraph.edges[selectedEdge].directed=!curGraph.edges[selectedEdge].directed

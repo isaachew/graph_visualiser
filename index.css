@@ -90,7 +90,7 @@ table{
     height:10vh
 }
 
-#tabs>div+div+div+div>div{
+#graphMenu>div{
     padding:5px
 }
 
@@ -108,7 +108,7 @@ button{
 }
 
 button:hover{
-    background:#ddd
+    background:#d0d0d0
 }
 
 input[type=number]{
