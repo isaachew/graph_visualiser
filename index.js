@@ -760,9 +760,13 @@ document.getElementById("drawCanvas").addEventListener("keydown",e=>{
         renderReps()
         pushUndo()
         updateGraph()
-        return 999999999999999999-1e18
     }else if(e.code=="KeyC"){
         cycleEdges()
+    }else if(e.code=="KeyR"){
+        [curGraph.edges[selectedEdge].v1,curGraph.edges[selectedEdge].v2]=[curGraph.edges[selectedEdge].v2,curGraph.edges[selectedEdge].v1]
+        renderReps()
+        pushUndo()
+        updateGraph()
     }
 })
 document.getElementById("deleteButton").addEventListener("click",e=>{
