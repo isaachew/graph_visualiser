@@ -880,6 +880,14 @@ document.getElementById("edgeDirected").addEventListener("input",e=>{
         updateGraph()
     }
 })
+document.getElementById("reverseEdge").addEventListener("click",e=>{
+    if(selectedEdge!=null){
+        [curGraph.edges[selectedEdge].v1,curGraph.edges[selectedEdge].v2]=[curGraph.edges[selectedEdge].v2,curGraph.edges[selectedEdge].v1]
+    }
+    pushUndo()
+    renderReps()
+    updateGraph()
+})
 document.getElementById("defaultEdgeCol").addEventListener("input",e=>{
     settings.edge.colour=e.target.value
     updateGraph()
